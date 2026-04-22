@@ -6,221 +6,360 @@
 <title>印刷解像度チェックツール</title>
 
 <style>
- .drop.active {
-  background: #f4f7ff;
-}
- input:focus {
-  border-color: var(--accent);
-  outline: none;
-}
   * {
-  box-sizing: border-box;
-}
-:root {
-  --bg: #f7f7fb;
-  --card: #ffffff;
-  --text: #222;
-  --sub: #666;
-  --line: #e7e7ef;
-  --accent: #5b7cfa;
-  --accent-weak: #eef2ff;
-  --shadow: 0 10px 30px rgba(0,0,0,.08);
-  --radius: 18px;
-  --ok: #1f8f5f;
-  --ng: #d64545;
-}
+    box-sizing: border-box;
+  }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(180deg, #f8f9ff 0%, #f5f5fa 100%);
-  color: var(--text);
-}
+  :root {
+    --bg: #f7f7fb;
+    --card: #ffffff;
+    --text: #222;
+    --sub: #666;
+    --line: #e7e7ef;
+    --accent: #5b7cfa;
+    --accent-weak: #eef2ff;
+    --shadow: 0 10px 30px rgba(0,0,0,.08);
+    --radius: 18px;
+    --ok: #1f8f5f;
+    --ng: #d64545;
+  }
 
-.wrap {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 32px 16px 48px;
-}
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #f8f9ff 0%, #f5f5fa 100%);
+    color: var(--text);
+  }
 
-.title {
-  font-size: 32px;
-  font-weight: 800;
-  margin-bottom: 10px;
-}
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 16px 48px;
+  }
 
-.lead {
-  color: var(--sub);
-  margin-bottom: 20px;
-}
+  .title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
 
-.back {
-  display: inline-block;
-  margin-bottom: 20px;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: bold;
-}
+  .lead {
+    color: var(--sub);
+    margin-bottom: 20px;
+    line-height: 1.7;
+  }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
+  .back {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: bold;
+  }
 
-.field {
-  margin-bottom: 14px;
-}
+  .back:hover {
+    text-decoration: underline;
+  }
 
-label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 6px;
-}
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-}
+  .field {
+    margin-bottom: 14px;
+  }
 
-.drop {
-  border: 2px dashed #ccc;
-  padding: 30px;
-  text-align: center;
-  margin-top: 20px;
-}
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+  }
 
-.preview, .result {
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 12px;
-  background: #f9f9ff;
-}
+  input,
+  select {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 16px;
+    background: #fff;
+  }
 
-.ok { color: var(--ok); font-weight: bold; }
-.ng { color: var(--ng); font-weight: bold; }
+  input:focus,
+  select:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(91,124,250,.12);
+  }
+
+  .preview,
+  .result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #f9f9ff;
+    line-height: 1.8;
+  }
+
+  .preview-title,
+  .result-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .drop {
+    border: 2px dashed #ccc;
+    border-radius: 14px;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--sub);
+    transition: 0.2s ease;
+  }
+
+  .drop.active {
+    background: #f4f7ff;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .drop-main {
+    font-weight: bold;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .drop-sub {
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
+  .file-button {
+    display: inline-block;
+    background: var(--accent-weak);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 10px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .file-button:hover {
+    opacity: 0.9;
+  }
+
+  .hidden-file {
+    display: none;
+  }
+
+  .ok {
+    color: var(--ok);
+    font-weight: bold;
+  }
+
+  .ng {
+    color: var(--ng);
+    font-weight: bold;
+  }
+
+  .muted {
+    color: var(--sub);
+  }
 </style>
 </head>
 
 <body>
 <div class="wrap">
 
-<a href="./" class="back">← ツール一覧に戻る</a>
+  <a href="./" class="back">← ツール一覧に戻る</a>
 
-<h1 class="title">印刷解像度チェックツール</h1>
-<p class="lead">印刷サイズから必要なpxを計算し、画像が使えるか判定します。</p>
+  <h1 class="title">印刷解像度チェックツール</h1>
+  <p class="lead">印刷サイズから必要なpxを計算し、画像が使えるか判定します。</p>
 
-<div class="card">
+  <div class="card">
 
-<div class="field">
-<label>横(mm)</label>
-<input id="wmm" type="number">
-</div>
+    <div class="field">
+      <label>横(mm)</label>
+      <input id="wmm" type="number" min="0" step="0.1" placeholder="例：30">
+    </div>
 
-<div class="field">
-<label>縦(mm)</label>
-<input id="hmm" type="number">
-</div>
+    <div class="field">
+      <label>縦(mm)</label>
+      <input id="hmm" type="number" min="0" step="0.1" placeholder="例：20">
+    </div>
 
-<div class="field">
-<label>DPI</label>
-<select id="dpi">
-<option value="300">300（印刷）</option>
-<option value="350">350</option>
-<option value="72">72</option>
-</select>
-</div>
+    <div class="field">
+      <label>DPI</label>
+      <select id="dpi">
+        <option value="300">300（印刷）</option>
+        <option value="350">350</option>
+        <option value="72">72</option>
+      </select>
+    </div>
 
-<div class="preview" id="preview"></div>
+    <div class="preview" id="preview">
+      <div class="preview-title">必要サイズ</div>
+      <div class="muted">サイズを入力してください</div>
+    </div>
 
-<div class="drop" id="drop">ここに画像をドラッグ</div>
+    <div class="drop" id="drop">
+      <div class="drop-main">ここに画像をドラッグ＆ドロップ</div>
+      <div class="drop-sub">または</div>
+      <label for="fileInput" class="file-button">画像を選択</label>
+      <input id="fileInput" class="hidden-file" type="file" accept="image/*">
+    </div>
 
-<div class="result" id="result"></div>
+    <div class="result" id="result">
+      <div class="result-title">判定結果</div>
+      <div class="muted">画像を入れてください</div>
+    </div>
 
-</div>
+  </div>
 </div>
 
 <script>
-const w = document.getElementById("wmm");
-const h = document.getElementById("hmm");
-const dpi = document.getElementById("dpi");
-const preview = document.getElementById("preview");
-const result = document.getElementById("result");
+  const w = document.getElementById("wmm");
+  const h = document.getElementById("hmm");
+  const dpi = document.getElementById("dpi");
+  const preview = document.getElementById("preview");
+  const result = document.getElementById("result");
+  const drop = document.getElementById("drop");
+  const fileInput = document.getElementById("fileInput");
 
-let imgW = null;
-let imgH = null;
+  let imgW = null;
+  let imgH = null;
+  let currentFileName = "";
 
-function mmToPx(mm, dpi) {
-  return Math.round((mm / 25.4) * dpi);
-}
-
-function updatePreview() {
-  let html = "";
-
-  if (w.value) html += `横：${mmToPx(w.value, dpi.value)}px以上<br>`;
-  if (h.value) html += `縦：${mmToPx(h.value, dpi.value)}px以上`;
-
-  preview.innerHTML = html || "サイズを入力してください";
-}
-
-function updateResult() {
-  if (!imgW) {
-    result.innerHTML = "画像を入れてください";
-    return;
+  function mmToPx(mm, dpiValue) {
+    return Math.round((mm / 25.4) * dpiValue);
   }
 
-  let ok = true;
-  let html = `画像：${imgW} × ${imgH}px<br>`;
+  function getNeedWidth() {
+    return w.value ? mmToPx(Number(w.value), Number(dpi.value)) : null;
+  }
 
-  if (w.value) {
-    let need = mmToPx(w.value, dpi.value);
-    if (imgW >= need) {
-      html += `<div class="ok">横OK</div>`;
-    } else {
-      html += `<div class="ng">横不足（あと ${need - imgW}px）</div>`;
-      ok = false;
+  function getNeedHeight() {
+    return h.value ? mmToPx(Number(h.value), Number(dpi.value)) : null;
+  }
+
+  function updatePreview() {
+    const needW = getNeedWidth();
+    const needH = getNeedHeight();
+
+    let html = '<div class="preview-title">必要サイズ</div>';
+
+    if (!needW && !needH) {
+      html += '<div class="muted">サイズを入力してください</div>';
+      preview.innerHTML = html;
+      return;
     }
-  }
 
-  if (h.value) {
-    let need = mmToPx(h.value, dpi.value);
-    if (imgH >= need) {
-      html += `<div class="ok">縦OK</div>`;
-    } else {
-      html += `<div class="ng">縦不足（あと ${need - imgH}px）</div>`;
-      ok = false;
+    if (needW) {
+      html += `<div>横：<strong>${needW}px以上</strong></div>`;
     }
+
+    if (needH) {
+      html += `<div>縦：<strong>${needH}px以上</strong></div>`;
+    }
+
+    preview.innerHTML = html;
   }
 
-  result.innerHTML = html;
-}
+  function updateResult() {
+    const needW = getNeedWidth();
+    const needH = getNeedHeight();
 
-[w, h, dpi].forEach(el => el.addEventListener("input", () => {
+    let html = '<div class="result-title">判定結果</div>';
+
+    if (!imgW || !imgH) {
+      html += '<div class="muted">画像を入れてください</div>';
+      result.innerHTML = html;
+      return;
+    }
+
+    html += `<div>画像：${imgW} × ${imgH}px</div>`;
+    if (currentFileName) {
+      html += `<div class="muted">ファイル：${currentFileName}</div>`;
+    }
+
+    if (!needW && !needH) {
+      html += '<div class="muted" style="margin-top:8px;">サイズを入力すると判定できます</div>';
+      result.innerHTML = html;
+      return;
+    }
+
+    if (needW) {
+      if (imgW >= needW) {
+        html += `<div class="ok">横OK</div>`;
+      } else {
+        html += `<div class="ng">横不足（あと ${needW - imgW}px）</div>`;
+      }
+    }
+
+    if (needH) {
+      if (imgH >= needH) {
+        html += `<div class="ok">縦OK</div>`;
+      } else {
+        html += `<div class="ng">縦不足（あと ${needH - imgH}px）</div>`;
+      }
+    }
+
+    result.innerHTML = html;
+  }
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+
+    currentFileName = file.name;
+
+    const img = new Image();
+    img.onload = () => {
+      imgW = img.width;
+      imgH = img.height;
+      updateResult();
+      URL.revokeObjectURL(img.src);
+    };
+
+    img.src = URL.createObjectURL(file);
+  }
+
+  [w, h, dpi].forEach(el => {
+    el.addEventListener("input", () => {
+      updatePreview();
+      updateResult();
+    });
+  });
+
+  drop.addEventListener("dragover", e => {
+    e.preventDefault();
+    drop.classList.add("active");
+  });
+
+  drop.addEventListener("dragleave", () => {
+    drop.classList.remove("active");
+  });
+
+  drop.addEventListener("drop", e => {
+    e.preventDefault();
+    drop.classList.remove("active");
+
+    const file = e.dataTransfer.files[0];
+    handleFile(file);
+  });
+
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    handleFile(file);
+  });
+
   updatePreview();
   updateResult();
-}));
-
-document.getElementById("drop").addEventListener("drop", e => {
-  e.preventDefault();
-  let file = e.dataTransfer.files[0];
-  let img = new Image();
-
-  img.onload = () => {
-    imgW = img.width;
-    imgH = img.height;
-    updateResult();
-  };
-
-  img.src = URL.createObjectURL(file);
-});
-
-document.getElementById("drop").addEventListener("dragover", e => e.preventDefault());
-
-updatePreview();
 </script>
 
 </body>
