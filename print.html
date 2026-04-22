@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>印刷解像度チェックツール</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 24px;
+      line-height: 1.6;
+      color: #222;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      font-size: 18px;
+      font-weight: bold;
+      display: inline-block;
+      width: 90px;
+    }
+
+    input,
+    select {
+      font-size: 18px;
+      padding: 8px 10px;
+      width: 220px;
+    }
+
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: -4px;
+      margin-bottom: 18px;
+    }
+
+    .preview-box,
+    .result-box {
+      margin-top: 20px;
+      padding: 18px 20px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+    }
+
+    .preview-title,
+    .result-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .drop {
+      border: 2px dashed #aaa;
+      padding: 40px 20px;
+      text-align: center;
+      margin-top: 28px;
+      font-size: 18px;
+    }
+
+    .drop.active {
+      background: #f5f5f5;
+      border-color: #333;
+    }
+
+    #result {
+      margin-top: 28px;
+      font-size: 18px;
+    }
+
+    .ok {
+      color: green;
+      font-weight: bold;
+    }
+
+    .ng {
+      color: red;
+      font-weight: bold;
+    }
+
+    .warn {
+      color: #b26a00;
+      font-weight: bold;
+    }
+
+    .block {
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>印刷解像度チェックツール</h1>
+
+  <h2>印刷サイズ</h2>
+
+  <div class="field">
+    <label for="wmm">横(mm)：</label>
+    <input type="number" id="wmm" min="0" step="0.1" placeholder="例：30" />
+  </div>
+
+  <div class="field">
+    <label for="hmm">縦(mm)：</label>
+    <input type="number" id="hmm" min="0" step="0.1" placeholder="例：20" />
+  </div>
+
+  <div class="note">横か縦、どちらか片方だけでもチェックできます。</div>
+
+  <div class="field">
+    <label for="dpi">DPI：</label>
+    <select id="dpi">
+      <option value="300" selected>300（印刷）</option>
+      <option value="350">350（高精細）</option>
+      <option value="72">72（WEB）</option>
+    </select>
+  </div>
+
+  <div class="preview-box" id="preview">
+    <div class="preview-title">必要な画像サイズ</div>
+    <div class="warn">横か縦のどちらかを入力してください。</div>
+  </div>
+
+  <div class="drop" id="drop">
+    ここに画像をドラッグ＆ドロップ
+  </div>
+
+  <div class="result-box" id="result">
+    <div class="result-title">判定結果</div>
+    <div class="warn">画像をドラッグ＆ドロップすると判定できます。</div>
+  </div>
+
+  <script>
+    const drop = document.getElementById("drop");
+    const result = document.getElementById("result");
+    const preview = document.getElementById("preview");
+
+    const wmmInput = document.getElementById("wmm");
+    const hmmInput = document.getElementById("hmm");
+    const dpiInput = document.getElementById("dpi");
+
+    let currentImageWidth = null;
+    let currentImageHeight = null;
+
+    function mmToPx(mm, dpi) {
+      return Math.round((mm / 25.4) * dpi);
+    }
+
+    function getInputValues() {
+      const wmm = parseFloat(wmmInput.value);
+      const hmm = parseFloat(hmmInput.value);
+      const dpi = parseFloat(dpiInput.value);
+
+      return {
+        wmm,
+        hmm,
+        dpi,
+        hasW: !isNaN(wmm) && wmm > 0,
+        hasH: !isNaN(hmm) && hmm > 0
+      };
+    }
+
+    function updatePreview() {
+      const { wmm, hmm, dpi, hasW, hasH } = getInputValues();
+
+      let html = '<div class="preview-title">必要な画像サイズ</div>';
+
+      if (!hasW && !hasH) {
+        html += '<div class="warn">横か縦のどちらかを入力してください。</div>';
+        preview.innerHTML = html;
+        return;
+      }
+
+      if (hasW) {
+        const needW = mmToPx(wmm, dpi);
+        html += `<div class="block">横 ${wmm}mm に必要な幅：<strong>${needW}px以上</strong></div>`;
+      }
+
+      if (hasH) {
+        const needH = mmToPx(hmm, dpi);
+        html += `<div class="block">縦 ${hmm}mm に必要な高さ：<strong>${needH}px以上</strong></div>`;
+      }
+
+      preview.innerHTML = html;
+    }
+
+    function updateResult() {
+      const { wmm, hmm, dpi, hasW, hasH } = getInputValues();
+
+      let html = '<div class="result-title">判定結果</div>';
+
+      if (currentImageWidth === null || currentImageHeight === null) {
+        html += '<div class="warn">画像をドラッグ＆ドロップすると判定できます。</div>';
+        result.innerHTML = html;
+        return;
+      }
+
+      if (!hasW && !hasH) {
+        html += '<div class="warn">横か縦のどちらかを入力してください。</div>';
+        result.innerHTML = html;
+        return;
+      }
+
+      html += `<div class="block">画像サイズ：${currentImageWidth} × ${currentImageHeight} px</div>`;
+
+      let overallOk = true;
+
+      if (hasW) {
+        const needW = mmToPx(wmm, dpi);
+        const okW = currentImageWidth >= needW;
+        const lackW = needW - currentImageWidth;
+
+        html += `
+          <div class="block">
+            横 ${wmm}mm に必要な幅：${needW}px<br>
+            ${
+              okW
+                ? '<span class="ok">横幅はOKです👌</span>'
+                : `<span class="ng">横幅が不足です⚠️ あと ${lackW}px 必要です</span>`
+            }
+          </div>
+        `;
+
+        if (!okW) overallOk = false;
+      }
+
+      if (hasH) {
+        const needH = mmToPx(hmm, dpi);
+        const okH = currentImageHeight >= needH;
+        const lackH = needH - currentImageHeight;
+
+        html += `
+          <div class="block">
+            縦 ${hmm}mm に必要な高さ：${needH}px<br>
+            ${
+              okH
+                ? '<span class="ok">高さはOKです👌</span>'
+                : `<span class="ng">高さが不足です⚠️ あと ${lackH}px 必要です</span>`
+            }
+          </div>
+        `;
+
+        if (!okH) overallOk = false;
+      }
+
+      if (hasW && hasH) {
+        html += `
+          <div class="block">
+            ${
+              overallOk
+                ? '<span class="ok">この画像は指定サイズで使用OKです👌</span>'
+                : '<span class="ng">この画像は指定サイズでは解像度不足です⚠️</span>'
+            }
+          </div>
+        `;
+      }
+
+      result.innerHTML = html;
+    }
+
+    function refreshAll() {
+      updatePreview();
+      updateResult();
+    }
+
+    wmmInput.addEventListener("input", refreshAll);
+    hmmInput.addEventListener("input", refreshAll);
+    dpiInput.addEventListener("change", refreshAll);
+
+    drop.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      drop.classList.add("active");
+    });
+
+    drop.addEventListener("dragleave", () => {
+      drop.classList.remove("active");
+    });
+
+    drop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      drop.classList.remove("active");
+
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+
+      const img = new Image();
+
+      img.onload = function () {
+        currentImageWidth = img.width;
+        currentImageHeight = img.height;
+        updateResult();
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+
+    refreshAll();
+  </script>
+</body>
+</html>
