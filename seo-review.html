@@ -18,7 +18,6 @@
   --shadow: 0 10px 30px rgba(0,0,0,.08);
   --radius: 18px;
   --ok: #1f8f5f;
-  --warn: #b7791f;
 }
 
 body {
@@ -34,24 +33,10 @@ body {
   padding: 32px 16px 48px;
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: 20px;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 700;
-}
-
 .title {
   font-size: 32px;
   font-weight: 800;
-  margin: 0 0 8px;
-}
-
-.lead {
-  color: var(--sub);
-  line-height: 1.7;
-  margin: 0 0 20px;
+  margin-bottom: 10px;
 }
 
 .card {
@@ -63,122 +48,51 @@ body {
   margin-bottom: 20px;
 }
 
-label {
-  font-weight: 700;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.required {
-  background: #ffe5e5;
-  color: #c53030;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  margin-left: 6px;
-}
-
 input {
   width: 100%;
   padding: 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  font-size: 16px;
-}
-
-input:focus {
-  border-color: var(--accent);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(91,124,250,.12);
-}
-
-.actions {
-  margin-top: 15px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 button {
+  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.secondary {
-  background: var(--accent-weak);
-  color: var(--accent);
-}
-
 .status {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #f9f9ff;
-  color: var(--sub);
-  line-height: 1.7;
-}
-
-.ok { color: var(--ok); font-weight: 700; }
-.warn { color: var(--warn); font-weight: 700; }
-
-.table-wrap {
-  overflow-x: auto;
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  font-size: 14px;
+  table-layout: fixed;
 }
 
 th, td {
   border: 1px solid #e5e7eb;
   padding: 10px;
   vertical-align: top;
-  text-align: left;
 }
 
 th {
   background: #f3f4ff;
-  font-weight: 700;
 }
+
+/* 列幅固定 */
+td:nth-child(1) { width: 30%; }
+td:nth-child(2) { width: 25%; font-size: 12px; }
+td:nth-child(3) { width: 45%; }
 
 td a {
-  color: var(--accent);
   word-break: break-all;
-}
-
-.copy-area {
-  white-space: pre-wrap;
-  line-height: 1.8;
-  font-size: 14px;
-  background: #f9f9ff;
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.muted {
-  color: var(--sub);
-}
-
-@media print {
-  body { background: #fff; }
-  .no-print { display: none !important; }
-  .wrap { max-width: none; padding: 0; }
-  .card {
-    box-shadow: none;
-    border: 1px solid #ccc;
-    page-break-inside: avoid;
-  }
-  #resultSection {
-    page-break-before: always;
-  }
 }
 </style>
 </head>
@@ -186,37 +100,16 @@ td a {
 <body>
 <div class="wrap">
 
-<a href="./" class="back no-print">← ツール一覧に戻る</a>
-
 <h1 class="title">SEO解析ツール</h1>
-<p class="lead">
-  URLからサイト構造を取得し、各ページのタイトル・ディスクリプションを一覧化します。
-</p>
 
-<div class="card no-print">
-  <label for="url">解析URL <span class="required">必須</span></label>
-  <input id="url" type="text" placeholder="https://example.com">
-
-  <div class="actions">
-    <button id="runBtn">解析する</button>
-    <button class="secondary" id="copyBtn">一覧をコピー</button>
-    <button class="secondary" onclick="window.print()">PDF出力</button>
-  </div>
+<div class="card">
+  <input id="url" placeholder="https://example.com">
+  <button onclick="run()">解析する</button>
+  <div id="status" class="status"></div>
 </div>
 
 <div class="card">
-  <h2>進捗</h2>
-  <div id="status" class="status">まだ解析していません。</div>
-</div>
-
-<div id="resultSection" class="card">
-  <h2>サイト構造</h2>
-  <div id="result" class="muted">解析結果がここに表示されます。</div>
-</div>
-
-<div class="card">
-  <h2>コピー用テキスト</h2>
-  <div id="copyText" class="copy-area">まだ取得していません。</div>
+  <div id="result"></div>
 </div>
 
 </div>
@@ -224,152 +117,66 @@ td a {
 <script>
 const WORKER = "https://seo-tool.geass1127.workers.dev/";
 
-let pageData = [];
+let data = [];
 
-const urlInput = document.getElementById("url");
-const statusEl = document.getElementById("status");
-const resultEl = document.getElementById("result");
-const copyTextEl = document.getElementById("copyText");
+async function run() {
+  const url = document.getElementById("url").value.trim();
+  if (!url) return alert("URL入れてね");
 
-async function runAnalysis() {
-  const targetUrl = urlInput.value.trim();
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
 
-  if (!targetUrl) {
-    alert("URLを入力してね！");
-    urlInput.focus();
+  result.innerHTML = "";
+  status.innerText = "サイト構造取得中...";
+
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(url)}`);
+  const json = await res.json();
+  const urls = json.urls || [];
+
+  if (!urls.length) {
+    status.innerText = "URL取得できなかった";
     return;
   }
 
-  pageData = [];
-  resultEl.innerHTML = "";
-  copyTextEl.textContent = "取得中...";
-  statusEl.innerHTML = "サイト構造を取得中...";
+  status.innerText = `ページ取得中 (0/${urls.length})`;
 
-  try {
-    const sitemapRes = await fetch(
-      `${WORKER}?mode=sitemap&url=${encodeURIComponent(targetUrl)}`
-    );
+  data = [];
 
-    const sitemapJson = await sitemapRes.json();
-    const urls = sitemapJson.urls || [];
+  for (let i = 0; i < urls.length; i++) {
+    const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
+    const d = await r.json();
 
-    if (!urls.length) {
-      statusEl.innerHTML = '<span class="warn">ページURLを取得できませんでした。</span>';
-      resultEl.innerHTML = "sitemap またはトップページ内リンクからページを見つけられませんでした。";
-      copyTextEl.textContent = "取得できませんでした。";
-      return;
-    }
+    data.push(d);
 
-    statusEl.innerHTML = `ページ情報を取得中...（0 / ${urls.length}）`;
+    status.innerText = `ページ取得中 (${i+1}/${urls.length})`;
 
-    for (let i = 0; i < urls.length; i++) {
-      const pageUrl = urls[i];
-
-      try {
-        const pageRes = await fetch(
-          `${WORKER}?url=${encodeURIComponent(pageUrl)}`
-        );
-        const data = await pageRes.json();
-
-        pageData.push({
-          title: data.title || "",
-          url: data.url || pageUrl,
-          description: data.description || "",
-          status: data.status || ""
-        });
-      } catch {
-        pageData.push({
-          title: "",
-          url: pageUrl,
-          description: "",
-          status: ""
-        });
-      }
-
-      statusEl.innerHTML = `ページ情報を取得中...（${i + 1} / ${urls.length}）`;
-      renderTable();
-      updateCopyText();
-    }
-
-    statusEl.innerHTML = `<span class="ok">完了しました。</span> ${pageData.length}件取得しました。`;
-
-  } catch (e) {
-    statusEl.innerHTML = `<span class="warn">取得中にエラーが発生しました。</span>`;
-    resultEl.innerHTML = escapeHtml(e.message);
-    copyTextEl.textContent = "取得できませんでした。";
+    render();
   }
+
+  status.innerText = "完了！";
 }
 
-function renderTable() {
-  if (!pageData.length) {
-    resultEl.innerHTML = "表示できるページがありません。";
-    return;
-  }
-
-  resultEl.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead>
+function render() {
+  document.getElementById("result").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>URL</th>
+          <th>ディスクリプション</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
           <tr>
-            <th style="width: 28%;">タイトル</th>
-            <th style="width: 38%;">URL</th>
-            <th style="width: 34%;">ディスクリプション</th>
+            <td>${d.title || "なし"}</td>
+            <td><a href="${d.url}" target="_blank">${d.url}</a></td>
+            <td>${d.description || "なし"}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${pageData.map(item => `
-            <tr>
-              <td>${escapeHtml(item.title || "なし")}</td>
-              <td><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.url)}</a></td>
-              <td>${escapeHtml(item.description || "なし")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
+        `).join("")}
+      </tbody>
+    </table>
   `;
-}
-
-function updateCopyText() {
-  if (!pageData.length) {
-    copyTextEl.textContent = "まだ取得していません。";
-    return;
-  }
-
-  copyTextEl.textContent = pageData.map(item => {
-    return `title: ${item.title || "なし"}
-url: ${item.url}
-description: ${item.description || "なし"}`;
-  }).join("\n\n");
-}
-
-document.getElementById("runBtn").addEventListener("click", runAnalysis);
-
-urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    runAnalysis();
-  }
-});
-
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  if (!pageData.length) {
-    alert("まだコピーできる内容がないよ！");
-    return;
-  }
-
-  await navigator.clipboard.writeText(copyTextEl.textContent);
-  alert("一覧をコピーしたよ！");
-});
-
-function escapeHtml(str = "") {
-  return String(str).replace(/[&<>"']/g, s => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[s]));
 }
 </script>
 
