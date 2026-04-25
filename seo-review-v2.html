@@ -6,84 +6,245 @@
 <title>SEO解析ツール V2</title>
 
 <style>
+* { box-sizing: border-box; }
+
+:root {
+  --card:#fff;
+  --text:#222;
+  --sub:#666;
+  --line:#e7e7ef;
+  --accent:#5b7cfa;
+  --accent-weak:#eef2ff;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --radius:18px;
+}
+
 body {
-  font-family: sans-serif;
-  padding: 20px;
-  background: #f5f6fb;
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic",sans-serif;
+  background:linear-gradient(180deg,#f8f9ff 0%,#f5f5fa 100%);
+  color:var(--text);
+}
+
+.wrap {
+  max-width:1100px;
+  margin:0 auto;
+  padding:32px 16px 48px;
+}
+
+.back {
+  display:inline-block;
+  margin-bottom:20px;
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:700;
+}
+
+.back:hover {
+  text-decoration:underline;
+}
+
+.title {
+  font-size:32px;
+  font-weight:800;
+  margin:0 0 10px;
+}
+
+.lead {
+  color:var(--sub);
+  line-height:1.7;
+  margin:0 0 20px;
 }
 
 .card {
-  background:#fff;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
   padding:20px;
-  border-radius:12px;
+  box-shadow:var(--shadow);
   margin-bottom:20px;
 }
 
 input, select {
   width:100%;
-  padding:10px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--line);
   margin-top:10px;
+  font-size:16px;
+  background:#fff;
+}
+
+input:focus, select:focus {
+  border-color:var(--accent);
+  outline:none;
+  box-shadow:0 0 0 4px rgba(91,124,250,.12);
+}
+
+.actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
 }
 
 button {
-  margin-top:10px;
-  padding:10px;
+  padding:10px 14px;
   border:none;
   border-radius:999px;
-  background:#5b7cfa;
+  background:var(--accent);
   color:#fff;
+  font-weight:700;
   cursor:pointer;
 }
 
 .secondary {
-  background:#eef2ff;
-  color:#5b7cfa;
+  background:var(--accent-weak);
+  color:var(--accent);
+}
+
+.status {
+  margin-top:12px;
+  padding:12px;
+  background:#f9f9ff;
+  border-radius:12px;
+  color:var(--sub);
+}
+
+.site-summary {
+  line-height:1.8;
+  background:#f9f9ff;
+  padding:14px;
+  border-radius:12px;
+  overflow-wrap:anywhere;
+}
+
+.table-wrap {
+  overflow-x:auto;
 }
 
 table {
   width:100%;
   border-collapse:collapse;
-  margin-top:20px;
+  table-layout:fixed;
+  background:#fff;
+  font-size:14px;
 }
 
 th, td {
-  border:1px solid #ddd;
-  padding:8px;
+  border:1px solid #e5e7eb;
+  padding:10px;
+  vertical-align:top;
+  text-align:left;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+th {
+  background:#f3f4ff;
+  font-weight:700;
+}
+
+th:nth-child(1), td:nth-child(1) { width:30%; }
+th:nth-child(2), td:nth-child(2) { width:25%; font-size:12px; }
+th:nth-child(3), td:nth-child(3) { width:45%; }
+
+td a {
+  color:var(--accent);
   word-break:break-all;
+  overflow-wrap:anywhere;
+}
+
+.copy-area {
+  white-space:pre-wrap;
+  line-height:1.8;
+  font-size:14px;
+  background:#f9f9ff;
+  border-radius:12px;
+  padding:14px;
+  overflow-wrap:anywhere;
+  word-break:break-all;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+.badge {
+  display:inline-block;
+  margin-left:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--accent-weak);
+  color:var(--accent);
+  font-size:12px;
+  font-weight:700;
+}
+
+@media print {
+  body { background:#fff; }
+  .no-print { display:none !important; }
+
+  .wrap {
+    max-width:none;
+    padding:0;
+  }
+
+  .card {
+    box-shadow:none;
+    border:1px solid #ccc;
+  }
+
+  th, td {
+    font-size:11px;
+    padding:7px;
+  }
 }
 </style>
 </head>
 
 <body>
+<div class="wrap">
 
-<a href="./">← ツール一覧に戻る</a>
+<a href="./" class="back no-print">← ツール一覧に戻る</a>
 
-<h1>SEO解析ツール V2（開発版）</h1>
+<h1 class="title">SEO解析ツール V2 <span class="badge">開発版</span></h1>
+<p class="lead no-print">サイト構造・タイトル・ディスクリプションを取得し、AI提案用プロンプトを生成します。</p>
 
-<div class="card">
+<div class="card no-print">
   <input id="url" placeholder="https://example.com">
 
   <select id="purpose">
-    <option value="">目的を選択</option>
+    <option value="">リニューアル目的を選択</option>
     <option>SEO強化</option>
     <option>採用強化</option>
     <option>問い合わせ増加</option>
+    <option>ブランディング</option>
   </select>
 
-  <button onclick="run()">解析する</button>
-  <button class="secondary" onclick="generatePrompt()">AI提案用プロンプト生成</button>
+  <div class="actions">
+    <button id="runBtn">解析する</button>
+    <button class="secondary" id="copyBtn">一覧をコピー</button>
+    <button class="secondary" onclick="window.print()">PDF出力</button>
+    <button class="secondary" id="promptBtn">AI提案用プロンプト生成</button>
+  </div>
 
-  <div id="status">未実行</div>
+  <div id="status" class="status">未実行</div>
 </div>
 
 <div class="card">
   <h2>サイト情報</h2>
-  <div id="summary"></div>
+  <div id="summary" class="site-summary">未取得</div>
 </div>
 
 <div class="card">
   <h2>サイトマップ</h2>
-  <div id="result"></div>
+  <div id="result">解析結果がここに表示されます。</div>
+</div>
+
+<div class="card no-print">
+  <h2>コピー用</h2>
+  <div id="copyText" class="copy-area">まだ取得していません。</div>
+</div>
+
 </div>
 
 <script>
@@ -93,76 +254,193 @@ let data = [];
 let siteName = "";
 let siteUrl = "";
 
+const urlInput = document.getElementById("url");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+const summaryEl = document.getElementById("summary");
+const copyTextEl = document.getElementById("copyText");
+
 async function run() {
-  const input = document.getElementById("url").value.trim();
-  if (!input) return alert("URL入れてね");
-
-  siteUrl = input;
-  data = [];
-  siteName = "";
-
-  document.getElementById("status").innerText = "取得中...";
-
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
-  const json = await res.json();
-
-  for (let url of json.urls) {
-    const r = await fetch(`${WORKER}?url=${encodeURIComponent(url)}`);
-    const d = await r.json();
-
-    data.push(d);
-    if (!siteName && d.title) siteName = d.title;
-
-    render();
-    updateSummary();
+  const input = urlInput.value.trim();
+  if (!input) {
+    alert("URLを入力してね！");
+    urlInput.focus();
+    return;
   }
 
-  document.getElementById("status").innerText = "完了！";
+  siteUrl = input;
+  siteName = "";
+  data = [];
+
+  resultEl.innerHTML = "";
+  summaryEl.innerHTML = "取得中...";
+  copyTextEl.innerText = "取得中...";
+  statusEl.innerText = "サイト構造取得中...";
+
+  try {
+    const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+    const json = await res.json();
+    const urls = json.urls || [];
+
+    if (!urls.length) {
+      statusEl.innerText = "取得失敗";
+      summaryEl.innerHTML = "ページURLを取得できませんでした。";
+      resultEl.innerHTML = "sitemap またはトップページ内リンクからページを見つけられませんでした。";
+      copyTextEl.innerText = "取得できませんでした。";
+      return;
+    }
+
+    statusEl.innerText = `ページ取得中 (0/${urls.length})`;
+
+    for (let i = 0; i < urls.length; i++) {
+      const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
+      const d = await r.json();
+
+      data.push({
+        title: d.title || "",
+        url: d.url || urls[i],
+        description: d.description || "",
+        status: d.status || ""
+      });
+
+      if (!siteName && d.title) siteName = d.title;
+
+      statusEl.innerText = `ページ取得中 (${i + 1}/${urls.length})`;
+
+      render();
+      updateSummary();
+      updateCopy();
+    }
+
+    statusEl.innerText = "完了！";
+  } catch (e) {
+    statusEl.innerText = "取得中にエラーが発生しました。";
+    summaryEl.innerHTML = "取得できませんでした。";
+    resultEl.innerHTML = escapeHtml(e.message);
+    copyTextEl.innerText = "取得できませんでした。";
+  }
 }
 
 function render() {
-  document.getElementById("result").innerHTML = `
-    <table>
-      <tr><th>タイトル</th><th>URL</th><th>説明</th></tr>
-      ${data.map(d => `
-        <tr>
-          <td>${d.title}</td>
-          <td>${d.url}</td>
-          <td>${d.description}</td>
-        </tr>
-      `).join("")}
-    </table>
+  resultEl.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>タイトル</th>
+            <th>URL</th>
+            <th>ディスクリプション</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(d => `
+            <tr>
+              <td>${escapeHtml(d.title || "なし")}</td>
+              <td><a href="${escapeHtml(d.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(d.url)}</a></td>
+              <td>${escapeHtml(d.description || "なし")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
 function updateSummary() {
-  document.getElementById("summary").innerHTML = `
-    サイト名：${siteName}<br>
-    URL：${siteUrl}<br>
-    ページ数：${data.length}
+  summaryEl.innerHTML = `
+    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
+    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
+    <div><strong>ページ数：</strong>${data.length}</div>
   `;
 }
 
-function generatePrompt() {
+function updateCopy() {
+  copyTextEl.innerText =
+    data.map(d => `title: ${d.title || "なし"}\nurl: ${d.url}\ndescription: ${d.description || "なし"}`).join("\n\n");
+}
+
+function copyList() {
+  if (!data.length) {
+    alert("まだコピーできる内容がないよ！");
+    return;
+  }
+
+  navigator.clipboard.writeText(copyTextEl.innerText);
+  alert("一覧をコピーしたよ！");
+}
+
+async function generatePrompt() {
+  if (!data.length) {
+    alert("先に解析してね！");
+    return;
+  }
+
   const purpose = document.getElementById("purpose").value;
 
-  let prompt = `
-あなたはSEOコンサルタントです。
-以下のサイトを分析し改善提案をしてください。
+  let prompt = "";
 
-目的：${purpose}
-URL：${siteUrl}
+  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\\n";
+  prompt += "以下の現状サイト情報をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\\n\\n";
 
-サイトマップ：
-`;
+  if (purpose) {
+    prompt += `【リニューアル目的】\\n${purpose}\\n\\n`;
+  }
 
-  data.forEach(d => {
-    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
+  prompt += `【サイト名】\\n${siteName || "未取得"}\\n\\n`;
+  prompt += `【サイトURL】\\n${siteUrl}\\n\\n`;
+
+  prompt += "【現状サイトマップ】\\n";
+  data.forEach((d, i) => {
+    prompt += `${i + 1}. ${d.title || "タイトルなし"}\\n`;
+    prompt += `URL: ${d.url}\\n`;
+    prompt += `description: ${d.description || "なし"}\\n\\n`;
   });
 
-  navigator.clipboard.writeText(prompt);
-  alert("コピーした！");
+  prompt += "【分析・提案してほしい内容】\\n";
+  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\\n\\n";
+  prompt += "1. 現状サイト構造の課題\\n";
+  prompt += "- 重複ページ\\n";
+  prompt += "- 導線の弱さ\\n";
+  prompt += "- SEO的に弱い構造\\n\\n";
+  prompt += "2. SEO観点で不足しているページ\\n";
+  prompt += "- 検索流入を増やすために必要なコンテンツ\\n\\n";
+  prompt += "3. 統合・削除・整理した方がよいページ\\n";
+  prompt += "- 重複や役割が曖昧なページ\\n\\n";
+  prompt += "4. リニューアル後の推奨サイトマップ\\n";
+  prompt += "- 分かりやすい階層構造で提示\\n\\n";
+  prompt += "5. title / description の改善方針\\n";
+  prompt += "- 検索キーワードを意識した方向性\\n\\n";
+  prompt += "6. 優先度付き改善提案\\n";
+  prompt += "- すぐやるべき\\n";
+  prompt += "- 中期\\n";
+  prompt += "- 長期\\n\\n";
+  prompt += "7. クライアント向け説明文\\n";
+  prompt += "- 専門用語を噛み砕いた提案文\\n";
+
+  await navigator.clipboard.writeText(prompt);
+  alert("AI提案用プロンプトをコピーしました！");
 }
+
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[s]));
+}
+
+document.getElementById("runBtn").addEventListener("click", run);
+document.getElementById("copyBtn").addEventListener("click", copyList);
+document.getElementById("promptBtn").addEventListener("click", generatePrompt);
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
 </script>
 
 </body>
