@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO解析ツール V2</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background: #f5f6fb;
+}
+
+.card {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+
+input, select {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+
+button {
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:999px;
+  background:#5b7cfa;
+  color:#fff;
+  cursor:pointer;
+}
+
+.secondary {
+  background:#eef2ff;
+  color:#5b7cfa;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+th, td {
+  border:1px solid #ddd;
+  padding:8px;
+  word-break:break-all;
+}
+</style>
+</head>
+
+<body>
+
+<a href="./">← ツール一覧に戻る</a>
+
+<h1>SEO解析ツール V2（開発版）</h1>
+
+<div class="card">
+  <input id="url" placeholder="https://example.com">
+
+  <select id="purpose">
+    <option value="">目的を選択</option>
+    <option>SEO強化</option>
+    <option>採用強化</option>
+    <option>問い合わせ増加</option>
+  </select>
+
+  <button onclick="run()">解析する</button>
+  <button class="secondary" onclick="generatePrompt()">AI提案用プロンプト生成</button>
+
+  <div id="status">未実行</div>
+</div>
+
+<div class="card">
+  <h2>サイト情報</h2>
+  <div id="summary"></div>
+</div>
+
+<div class="card">
+  <h2>サイトマップ</h2>
+  <div id="result"></div>
+</div>
+
+<script>
+const WORKER = "https://seo-tool.geass1127.workers.dev/";
+
+let data = [];
+let siteName = "";
+let siteUrl = "";
+
+async function run() {
+  const input = document.getElementById("url").value.trim();
+  if (!input) return alert("URL入れてね");
+
+  siteUrl = input;
+  data = [];
+  siteName = "";
+
+  document.getElementById("status").innerText = "取得中...";
+
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+  const json = await res.json();
+
+  for (let url of json.urls) {
+    const r = await fetch(`${WORKER}?url=${encodeURIComponent(url)}`);
+    const d = await r.json();
+
+    data.push(d);
+    if (!siteName && d.title) siteName = d.title;
+
+    render();
+    updateSummary();
+  }
+
+  document.getElementById("status").innerText = "完了！";
+}
+
+function render() {
+  document.getElementById("result").innerHTML = `
+    <table>
+      <tr><th>タイトル</th><th>URL</th><th>説明</th></tr>
+      ${data.map(d => `
+        <tr>
+          <td>${d.title}</td>
+          <td>${d.url}</td>
+          <td>${d.description}</td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+function updateSummary() {
+  document.getElementById("summary").innerHTML = `
+    サイト名：${siteName}<br>
+    URL：${siteUrl}<br>
+    ページ数：${data.length}
+  `;
+}
+
+function generatePrompt() {
+  const purpose = document.getElementById("purpose").value;
+
+  let prompt = `
+あなたはSEOコンサルタントです。
+以下のサイトを分析し改善提案をしてください。
+
+目的：${purpose}
+URL：${siteUrl}
+
+サイトマップ：
+`;
+
+  data.forEach(d => {
+    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
+  });
+
+  navigator.clipboard.writeText(prompt);
+  alert("コピーした！");
+}
+</script>
+
+</body>
+</html>
