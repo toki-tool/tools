@@ -89,7 +89,6 @@ button {
   color:var(--sub);
 }
 
-/* テーブル */
 .table-wrap {
   overflow-x:auto;
 }
@@ -113,19 +112,16 @@ th {
   background:#f3f4ff;
 }
 
-/* 列幅 */
 th:nth-child(1), td:nth-child(1) { width:30%; }
 th:nth-child(2), td:nth-child(2) { width:25%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:45%; }
 
-/* URL折り返し */
 td a {
   color:var(--accent);
   word-break:break-all;
   overflow-wrap:anywhere;
 }
 
-/* コピー用 */
 .copy-area {
   white-space:pre-wrap;
   line-height:1.8;
@@ -139,7 +135,6 @@ td a {
   overflow-x:hidden;
 }
 
-/* サマリー */
 .site-summary {
   line-height:1.8;
   background:#f9f9ff;
@@ -147,7 +142,6 @@ td a {
   border-radius:12px;
 }
 
-/* 印刷 */
 @media print {
   body { background:#fff; }
   .no-print { display:none !important; }
@@ -157,10 +151,6 @@ td a {
     box-shadow:none;
     border:1px solid #ccc;
     page-break-inside:avoid;
-  }
-
-  #summarySection {
-    page-break-after:always;
   }
 
   th, td {
@@ -181,8 +171,8 @@ td a {
   <input id="url" placeholder="https://example.com">
 
   <div class="actions">
-    <button onclick="run()">解析する</button>
-    <button class="secondary" onclick="copy()">コピー</button>
+    <button id="runBtn">解析する</button>
+    <button class="secondary" id="copyBtn">コピー</button>
     <button class="secondary" onclick="window.print()">PDF</button>
   </div>
 
@@ -212,8 +202,12 @@ let data = [];
 let siteName = "";
 let siteUrl = "";
 
+const urlInput = document.getElementById("url");
+const runBtn = document.getElementById("runBtn");
+const copyBtn = document.getElementById("copyBtn");
+
 async function run() {
-  const input = document.getElementById("url").value.trim();
+  const input = urlInput.value.trim();
   if (!input) return alert("URL入れてね");
 
   siteUrl = input;
@@ -235,6 +229,7 @@ async function run() {
 
   if (!urls.length) {
     status.innerText = "取得失敗";
+    summary.innerHTML = "取得できませんでした。";
     return;
   }
 
@@ -250,7 +245,7 @@ async function run() {
       siteName = d.title;
     }
 
-    status.innerText = `ページ取得中 (${i+1}/${urls.length})`;
+    status.innerText = `ページ取得中 (${i + 1}/${urls.length})`;
 
     render();
     updateSummary();
@@ -274,9 +269,9 @@ function render() {
       <tbody>
         ${data.map(d => `
           <tr>
-            <td>${d.title || "なし"}</td>
-            <td><a href="${d.url}" target="_blank">${d.url}</a></td>
-            <td>${d.description || "なし"}</td>
+            <td>${escapeHtml(d.title || "なし")}</td>
+            <td><a href="${escapeHtml(d.url)}" target="_blank">${escapeHtml(d.url)}</a></td>
+            <td>${escapeHtml(d.description || "なし")}</td>
           </tr>
         `).join("")}
       </tbody>
@@ -286,21 +281,41 @@ function render() {
 
 function updateSummary() {
   document.getElementById("summary").innerHTML = `
-    <div><strong>サイト名：</strong>${siteName || "未取得"}</div>
-    <div><strong>URL：</strong>${siteUrl}</div>
+    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
+    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
     <div><strong>ページ数：</strong>${data.length}</div>
   `;
 }
 
 function updateCopy() {
   document.getElementById("copyText").innerText =
-    data.map(d => `title: ${d.title}\nurl: ${d.url}\ndescription: ${d.description}`).join("\n\n");
+    data.map(d => `title: ${d.title || "なし"}\nurl: ${d.url}\ndescription: ${d.description || "なし"}`).join("\n\n");
 }
 
 function copy() {
   navigator.clipboard.writeText(document.getElementById("copyText").innerText);
   alert("コピーしたよ！");
 }
+
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[s]));
+}
+
+runBtn.addEventListener("click", run);
+copyBtn.addEventListener("click", copy);
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
 </script>
 
 </body>
