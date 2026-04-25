@@ -60,11 +60,12 @@ body {
   margin-bottom:20px;
 }
 
-input {
+input, select {
   width:100%;
   padding:12px;
   border-radius:12px;
   border:1px solid var(--line);
+  margin-top:10px;
 }
 
 button {
@@ -97,9 +98,7 @@ button {
   color:var(--sub);
 }
 
-.table-wrap {
-  overflow-x:auto;
-}
+.table-wrap { overflow-x:auto; }
 
 table {
   width:100%;
@@ -113,21 +112,16 @@ th, td {
   vertical-align:top;
   text-align:left;
   overflow-wrap:anywhere;
-  word-break:break-word;
 }
 
-th {
-  background:#f3f4ff;
-}
+th { background:#f3f4ff; }
 
 th:nth-child(1), td:nth-child(1) { width:30%; }
 th:nth-child(2), td:nth-child(2) { width:25%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:45%; }
 
 td a {
-  color:var(--accent);
   word-break:break-all;
-  overflow-wrap:anywhere;
 }
 
 .copy-area {
@@ -138,9 +132,6 @@ td a {
   border-radius:12px;
   padding:14px;
   overflow-wrap:anywhere;
-  word-break:break-all;
-  max-width:100%;
-  overflow-x:hidden;
 }
 
 .site-summary {
@@ -151,42 +142,7 @@ td a {
 }
 
 @media print {
-  body { background:#fff; }
   .no-print { display:none !important; }
-
-  .wrap {
-    max-width:none;
-    padding:0;
-  }
-
-  .card {
-    box-shadow:none;
-    border:1px solid #ccc;
-  }
-
-  #summarySection {
-    page-break-inside:avoid;
-    margin-bottom:12px;
-  }
-
-  #sitemapSection {
-    page-break-before:auto;
-    page-break-inside:auto;
-  }
-
-  table {
-    page-break-inside:auto;
-  }
-
-  tr {
-    page-break-inside:avoid;
-    page-break-after:auto;
-  }
-
-  th, td {
-    font-size:11px;
-    padding:7px;
-  }
 }
 </style>
 </head>
@@ -197,26 +153,34 @@ td a {
 <a href="./" class="back no-print">← ツール一覧に戻る</a>
 
 <h1 class="title">SEO解析ツール</h1>
-<p class="lead no-print">URLからサイト構造を取得し、各ページの情報を一覧化します。</p>
 
 <div class="card no-print">
   <input id="url" placeholder="https://example.com">
+
+  <select id="purpose">
+    <option value="">リニューアル目的を選択</option>
+    <option>採用強化</option>
+    <option>問い合わせ増加</option>
+    <option>SEO強化</option>
+    <option>ブランディング</option>
+  </select>
 
   <div class="actions">
     <button id="runBtn">解析する</button>
     <button class="secondary" id="copyBtn">コピー</button>
     <button class="secondary" onclick="window.print()">PDF</button>
+    <button class="secondary" id="promptBtn">提案生成</button>
   </div>
 
   <div id="status" class="status">未実行</div>
 </div>
 
-<div id="summarySection" class="card">
+<div class="card">
   <h2>サイト情報</h2>
   <div id="summary" class="site-summary">未取得</div>
 </div>
 
-<div id="sitemapSection" class="card">
+<div class="card">
   <h2>サイトマップ</h2>
   <div id="result"></div>
 </div>
@@ -230,13 +194,12 @@ td a {
 
 <script>
 const WORKER = "https://seo-tool.geass1127.workers.dev/";
+
 let data = [];
 let siteName = "";
 let siteUrl = "";
 
 const urlInput = document.getElementById("url");
-const runBtn = document.getElementById("runBtn");
-const copyBtn = document.getElementById("copyBtn");
 
 async function run() {
   const input = urlInput.value.trim();
@@ -247,25 +210,13 @@ async function run() {
   data = [];
 
   const status = document.getElementById("status");
-  const result = document.getElementById("result");
-  const summary = document.getElementById("summary");
 
-  result.innerHTML = "";
-  summary.innerHTML = "取得中...";
-  status.innerText = "サイト構造取得中...";
+  status.innerText = "取得中...";
 
   const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
   const json = await res.json();
 
   const urls = json.urls || [];
-
-  if (!urls.length) {
-    status.innerText = "取得失敗";
-    summary.innerHTML = "取得できませんでした。";
-    return;
-  }
-
-  status.innerText = `ページ取得中 (0/${urls.length})`;
 
   for (let i = 0; i < urls.length; i++) {
     const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
@@ -273,11 +224,9 @@ async function run() {
 
     data.push(d);
 
-    if (!siteName && d.title) {
-      siteName = d.title;
-    }
+    if (!siteName && d.title) siteName = d.title;
 
-    status.innerText = `ページ取得中 (${i + 1}/${urls.length})`;
+    status.innerText = `取得中 (${i+1}/${urls.length})`;
 
     render();
     updateSummary();
@@ -289,65 +238,66 @@ async function run() {
 
 function render() {
   document.getElementById("result").innerHTML = `
-  <div class="table-wrap">
-    <table>
-      <thead>
+  <table>
+    <thead>
+      <tr>
+        <th>タイトル</th>
+        <th>URL</th>
+        <th>ディスクリプション</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(d => `
         <tr>
-          <th>タイトル</th>
-          <th>URL</th>
-          <th>ディスクリプション</th>
+          <td>${d.title || "なし"}</td>
+          <td><a href="${d.url}" target="_blank">${d.url}</a></td>
+          <td>${d.description || "なし"}</td>
         </tr>
-      </thead>
-      <tbody>
-        ${data.map(d => `
-          <tr>
-            <td>${escapeHtml(d.title || "なし")}</td>
-            <td><a href="${escapeHtml(d.url)}" target="_blank">${escapeHtml(d.url)}</a></td>
-            <td>${escapeHtml(d.description || "なし")}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  </div>`;
+      `).join("")}
+    </tbody>
+  </table>`;
 }
 
 function updateSummary() {
   document.getElementById("summary").innerHTML = `
-    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
-    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
+    <div><strong>サイト名：</strong>${siteName || "未取得"}</div>
+    <div><strong>URL：</strong>${siteUrl}</div>
     <div><strong>ページ数：</strong>${data.length}</div>
   `;
 }
 
 function updateCopy() {
   document.getElementById("copyText").innerText =
-    data.map(d => `title: ${d.title || "なし"}\nurl: ${d.url}\ndescription: ${d.description || "なし"}`).join("\n\n");
+    data.map(d => `title: ${d.title}\nurl: ${d.url}\ndescription: ${d.description}`).join("\n\n");
 }
 
-function copy() {
+document.getElementById("copyBtn").onclick = () => {
   navigator.clipboard.writeText(document.getElementById("copyText").innerText);
   alert("コピーしたよ！");
-}
+};
 
-function escapeHtml(str = "") {
-  return String(str).replace(/[&<>"']/g, s => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[s]));
-}
-
-runBtn.addEventListener("click", run);
-copyBtn.addEventListener("click", copy);
+document.getElementById("runBtn").onclick = run;
 
 urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
+  if (e.key === "Enter") run();
 });
+
+// 🔥 提案ボタン
+document.getElementById("promptBtn").onclick = async () => {
+  const purpose = document.getElementById("purpose").value;
+
+  let prompt = `以下のサイトの改善提案をしてください。\n\n`;
+  if (purpose) prompt += `【目的】${purpose}\n\n`;
+
+  prompt += `【サイト】${siteUrl}\n\n`;
+
+  data.forEach(d => {
+    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
+  });
+
+  await navigator.clipboard.writeText(prompt);
+  alert("提案プロンプトコピーした！");
+};
 </script>
 
 </body>
