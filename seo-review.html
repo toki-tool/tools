@@ -9,90 +9,164 @@
 * { box-sizing: border-box; }
 
 :root {
-  --card: #ffffff;
-  --text: #222;
-  --sub: #666;
-  --line: #e7e7ef;
-  --accent: #5b7cfa;
-  --accent-weak: #eef2ff;
-  --shadow: 0 10px 30px rgba(0,0,0,.08);
-  --radius: 18px;
-  --ok: #1f8f5f;
+  --card:#fff;
+  --text:#222;
+  --sub:#666;
+  --line:#e7e7ef;
+  --accent:#5b7cfa;
+  --accent-weak:#eef2ff;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --radius:18px;
 }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(180deg, #f8f9ff 0%, #f5f5fa 100%);
-  color: var(--text);
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(180deg,#f8f9ff 0%,#f5f5fa 100%);
+  color:var(--text);
 }
 
 .wrap {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 16px 48px;
+  max-width:1100px;
+  margin:0 auto;
+  padding:32px 16px 48px;
 }
 
 .title {
-  font-size: 32px;
-  font-weight: 800;
-  margin-bottom: 10px;
+  font-size:32px;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.lead {
+  color:var(--sub);
+  margin-bottom:20px;
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
 }
 
 input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--line);
 }
 
 button {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
+  margin-top:10px;
+  padding:10px 14px;
+  border:none;
+  border-radius:999px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.secondary {
+  background:var(--accent-weak);
+  color:var(--accent);
 }
 
 .status {
-  margin-top: 10px;
+  margin-top:10px;
+  padding:10px;
+  background:#f9f9ff;
+  border-radius:10px;
+  color:var(--sub);
+}
+
+/* テーブル */
+.table-wrap {
+  overflow-x:auto;
 }
 
 table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
 }
 
 th, td {
-  border: 1px solid #e5e7eb;
-  padding: 10px;
-  vertical-align: top;
+  border:1px solid #e5e7eb;
+  padding:10px;
+  vertical-align:top;
+  text-align:left;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 th {
-  background: #f3f4ff;
+  background:#f3f4ff;
 }
 
-/* 列幅固定 */
-td:nth-child(1) { width: 30%; }
-td:nth-child(2) { width: 25%; font-size: 12px; }
-td:nth-child(3) { width: 45%; }
+/* 列幅 */
+th:nth-child(1), td:nth-child(1) { width:30%; }
+th:nth-child(2), td:nth-child(2) { width:25%; font-size:12px; }
+th:nth-child(3), td:nth-child(3) { width:45%; }
 
+/* URL折り返し */
 td a {
-  word-break: break-all;
+  color:var(--accent);
+  word-break:break-all;
+  overflow-wrap:anywhere;
+}
+
+/* コピー用 */
+.copy-area {
+  white-space:pre-wrap;
+  line-height:1.8;
+  font-size:14px;
+  background:#f9f9ff;
+  border-radius:12px;
+  padding:14px;
+  overflow-wrap:anywhere;
+  word-break:break-all;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+/* サマリー */
+.site-summary {
+  line-height:1.8;
+  background:#f9f9ff;
+  padding:14px;
+  border-radius:12px;
+}
+
+/* 印刷 */
+@media print {
+  body { background:#fff; }
+  .no-print { display:none !important; }
+  .wrap { max-width:none; padding:0; }
+
+  .card {
+    box-shadow:none;
+    border:1px solid #ccc;
+    page-break-inside:avoid;
+  }
+
+  #summarySection {
+    page-break-after:always;
+  }
+
+  th, td {
+    font-size:11px;
+    padding:7px;
+  }
 }
 </style>
 </head>
@@ -101,46 +175,70 @@ td a {
 <div class="wrap">
 
 <h1 class="title">SEO解析ツール</h1>
+<p class="lead no-print">URLからサイト構造を取得し、各ページの情報を一覧化します。</p>
 
-<div class="card">
+<div class="card no-print">
   <input id="url" placeholder="https://example.com">
-  <button onclick="run()">解析する</button>
-  <div id="status" class="status"></div>
+
+  <div class="actions">
+    <button onclick="run()">解析する</button>
+    <button class="secondary" onclick="copy()">コピー</button>
+    <button class="secondary" onclick="window.print()">PDF</button>
+  </div>
+
+  <div id="status" class="status">未実行</div>
+</div>
+
+<div id="summarySection" class="card">
+  <h2>サイト情報</h2>
+  <div id="summary" class="site-summary">未取得</div>
 </div>
 
 <div class="card">
+  <h2>サイトマップ</h2>
   <div id="result"></div>
+</div>
+
+<div class="card no-print">
+  <h2>コピー用</h2>
+  <div id="copyText" class="copy-area"></div>
 </div>
 
 </div>
 
 <script>
 const WORKER = "https://seo-tool.geass1127.workers.dev/";
-
 let data = [];
+let siteName = "";
+let siteUrl = "";
 
 async function run() {
-  const url = document.getElementById("url").value.trim();
-  if (!url) return alert("URL入れてね");
+  const input = document.getElementById("url").value.trim();
+  if (!input) return alert("URL入れてね");
+
+  siteUrl = input;
+  siteName = "";
+  data = [];
 
   const status = document.getElementById("status");
   const result = document.getElementById("result");
+  const summary = document.getElementById("summary");
 
   result.innerHTML = "";
+  summary.innerHTML = "取得中...";
   status.innerText = "サイト構造取得中...";
 
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(url)}`);
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
   const json = await res.json();
+
   const urls = json.urls || [];
 
   if (!urls.length) {
-    status.innerText = "URL取得できなかった";
+    status.innerText = "取得失敗";
     return;
   }
 
   status.innerText = `ページ取得中 (0/${urls.length})`;
-
-  data = [];
 
   for (let i = 0; i < urls.length; i++) {
     const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
@@ -148,9 +246,15 @@ async function run() {
 
     data.push(d);
 
+    if (!siteName && d.title) {
+      siteName = d.title;
+    }
+
     status.innerText = `ページ取得中 (${i+1}/${urls.length})`;
 
     render();
+    updateSummary();
+    updateCopy();
   }
 
   status.innerText = "完了！";
@@ -158,6 +262,7 @@ async function run() {
 
 function render() {
   document.getElementById("result").innerHTML = `
+  <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -176,7 +281,25 @@ function render() {
         `).join("")}
       </tbody>
     </table>
+  </div>`;
+}
+
+function updateSummary() {
+  document.getElementById("summary").innerHTML = `
+    <div><strong>サイト名：</strong>${siteName || "未取得"}</div>
+    <div><strong>URL：</strong>${siteUrl}</div>
+    <div><strong>ページ数：</strong>${data.length}</div>
   `;
+}
+
+function updateCopy() {
+  document.getElementById("copyText").innerText =
+    data.map(d => `title: ${d.title}\nurl: ${d.url}\ndescription: ${d.description}`).join("\n\n");
+}
+
+function copy() {
+  navigator.clipboard.writeText(document.getElementById("copyText").innerText);
+  alert("コピーしたよ！");
 }
 </script>
 
