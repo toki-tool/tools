@@ -32,6 +32,14 @@ body {
   padding:32px 16px 48px;
 }
 
+.back {
+  display:inline-block;
+  margin-bottom:20px;
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:700;
+}
+
 .title {
   font-size:32px;
   font-weight:800;
@@ -145,12 +153,34 @@ td a {
 @media print {
   body { background:#fff; }
   .no-print { display:none !important; }
-  .wrap { max-width:none; padding:0; }
+
+  .wrap {
+    max-width:none;
+    padding:0;
+  }
 
   .card {
     box-shadow:none;
     border:1px solid #ccc;
+  }
+
+  #summarySection {
     page-break-inside:avoid;
+    margin-bottom:12px;
+  }
+
+  #sitemapSection {
+    page-break-before:auto;
+    page-break-inside:auto;
+  }
+
+  table {
+    page-break-inside:auto;
+  }
+
+  tr {
+    page-break-inside:avoid;
+    page-break-after:auto;
   }
 
   th, td {
@@ -163,6 +193,8 @@ td a {
 
 <body>
 <div class="wrap">
+
+<a href="./" class="back no-print">← ツール一覧に戻る</a>
 
 <h1 class="title">SEO解析ツール</h1>
 <p class="lead no-print">URLからサイト構造を取得し、各ページの情報を一覧化します。</p>
@@ -184,7 +216,7 @@ td a {
   <div id="summary" class="site-summary">未取得</div>
 </div>
 
-<div class="card">
+<div id="sitemapSection" class="card">
   <h2>サイトマップ</h2>
   <div id="result"></div>
 </div>
