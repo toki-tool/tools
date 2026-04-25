@@ -17,9 +17,7 @@
       --radius: 20px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -38,14 +36,12 @@
       font-size: clamp(32px, 4.8vw, 48px);
       font-weight: 800;
       margin: 0 0 10px;
-      letter-spacing: 0.02em;
     }
 
     .lead {
       margin: 0 0 28px;
       color: var(--sub);
       line-height: 1.8;
-      font-size: 16px;
     }
 
     .grid {
@@ -62,13 +58,12 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 22px;
-      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      transition: .2s;
     }
 
     .card:hover {
       transform: translateY(-2px);
       border-color: #d6defe;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.1);
     }
 
     .tag {
@@ -83,21 +78,14 @@
     }
 
     .card-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .card-text {
       color: var(--sub);
-      line-height: 1.8;
-      font-size: 15px;
-    }
-
-    .footer {
-      margin-top: 24px;
-      color: #777;
-      font-size: 13px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -105,29 +93,36 @@
   <div class="wrap">
     <h1 class="title">すみの便利ツール</h1>
     <p class="lead">
-      日々の業務でよく使う作業を、少しでも手早く進めるためのミニツール集です。
+      日々の業務をちょっと楽にするためのミニツール集。
     </p>
 
     <div class="grid">
+
       <a class="card" href="./aspect.html">
         <div class="tag">画像</div>
-        <div class="card-title">画像比率計算ツール</div>
+        <div class="card-title">画像比率計算</div>
         <div class="card-text">
-          元画像サイズから、比率を保ったまま新しい横幅・高さを自動計算します。
+          比率を保ったままサイズを計算
         </div>
       </a>
 
       <a class="card" href="./print.html">
         <div class="tag">印刷</div>
-        <div class="card-title">印刷解像度チェックツール</div>
+        <div class="card-title">印刷解像度チェック</div>
         <div class="card-text">
-          印刷サイズとDPIから必要なpx数を確認して、画像が使えるか判定できます。
+          印刷サイズから必要なpxを判定
         </div>
       </a>
-    </div>
 
-    <div class="footer">
-      必要に応じて、今後も少しずつ追加予定です。
+      <!-- 🔥 追加ここ -->
+      <a class="card" href="./seo-review.html">
+        <div class="tag">SEO</div>
+        <div class="card-title">SEO解析ツール</div>
+        <div class="card-text">
+          サイト構造・タイトル・ディスクリプションを一覧化し、提案用データを生成
+        </div>
+      </a>
+
     </div>
   </div>
 </body>
