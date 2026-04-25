@@ -8,24 +8,11 @@
 <style>
 * { box-sizing: border-box; }
 
-:root {
-  --bg: #f7f7fb;
-  --card: #ffffff;
-  --text: #222;
-  --sub: #666;
-  --line: #e7e7ef;
-  --accent: #5b7cfa;
-  --accent-weak: #eef2ff;
-  --shadow: 0 10px 30px rgba(0,0,0,.08);
-  --radius: 18px;
-  --warn: #b7791f;
-}
-
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: linear-gradient(180deg, #f8f9ff 0%, #f5f5fa 100%);
-  color: var(--text);
+  color: #222;
 }
 
 .wrap {
@@ -34,152 +21,79 @@ body {
   padding: 32px 16px;
 }
 
-.title {
+h1 {
   font-size: 28px;
-  font-weight: 800;
   margin-bottom: 10px;
 }
 
 .lead {
-  color: var(--sub);
+  color: #666;
   margin-bottom: 20px;
-  line-height: 1.7;
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  background: #fff;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
   margin-bottom: 20px;
-}
-
-label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.required {
-  background: #ffe5e5;
-  color: #c53030;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 12px;
-  margin-left: 6px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
-  border: 1px solid var(--line);
-}
-
-input:focus {
-  border-color: var(--accent);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(91,124,250,.12);
+  border: 1px solid #ddd;
 }
 
 .actions {
   margin-top: 15px;
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
 }
 
 button {
   padding: 10px 14px;
-  border: none;
   border-radius: 999px;
-  background: var(--accent);
+  border: none;
+  background: #5b7cfa;
   color: #fff;
-  font-weight: bold;
   cursor: pointer;
 }
 
 .secondary {
-  background: var(--accent-weak);
-  color: var(--accent);
-}
-
-.result {
-  margin-top: 15px;
-  padding: 12px;
-  background: #f9f9ff;
-  border-radius: 12px;
-}
-
-.warn {
-  color: var(--warn);
-  font-weight: bold;
-}
-
-.table-wrap {
-  overflow-x: auto;
-  margin-top: 12px;
+  background: #eef2ff;
+  color: #5b7cfa;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  margin-top: 10px;
   font-size: 14px;
 }
 
 th, td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #eee;
   padding: 10px;
-  vertical-align: top;
   text-align: left;
 }
 
 th {
   background: #f3f4ff;
-  font-weight: 700;
 }
 
 td a {
-  color: var(--accent);
+  color: #5b7cfa;
   word-break: break-all;
 }
 
-.copy-area {
-  white-space: pre-wrap;
-  line-height: 1.8;
-  font-size: 14px;
+.result {
+  margin-top: 10px;
 }
 
-.muted {
-  color: var(--sub);
-}
-
-/* 印刷用 */
 @media print {
-  body {
-    background: #fff;
-  }
-
-  button, input {
-    display: none !important;
-  }
-
-  .wrap {
-    max-width: none;
-    padding: 0;
-  }
-
-  .card {
-    box-shadow: none;
-    border: 1px solid #ccc;
-    page-break-inside: avoid;
-  }
-
-  #sitemapSection {
-    page-break-before: always;
-  }
+  button, input { display: none; }
 }
 </style>
 </head>
@@ -187,238 +101,113 @@ td a {
 <body>
 <div class="wrap">
 
-<h1 class="title">SEO解析ツール</h1>
-<p class="lead">URLからサイトマップを取得し、各ページのタイトルとディスクリプションを自動取得します。</p>
+<h1>SEO解析ツール</h1>
+<p class="lead">サイト構造＋タイトル＋ディスクリプションを自動取得</p>
 
 <div class="card">
-  <label>URL <span class="required">必須</span></label>
-  <input id="url" type="text" placeholder="https://example.com">
+  <input id="url" placeholder="https://example.com">
 
   <div class="actions">
-    <button id="getMapBtn">サイト構造を取得</button>
-    <button class="secondary" id="copyBtn">一覧をコピー</button>
-    <button class="secondary" onclick="window.print()">PDF出力</button>
+    <button id="runBtn">解析する</button>
+    <button class="secondary" onclick="window.print()">PDF</button>
+    <button class="secondary" id="copyBtn">コピー</button>
   </div>
 </div>
 
-<div id="sitemapSection" class="card">
-  <h2>サイト構造</h2>
-  <div id="sitemapResult" class="result">まだ取得していません</div>
-</div>
-
 <div class="card">
-  <h2>コピー用テキスト</h2>
-  <div id="copyText" class="result copy-area">まだ取得していません</div>
+  <div id="status">未実行</div>
+  <div id="result"></div>
 </div>
 
 </div>
 
 <script>
-const WORKER_URL = "https://seo-tool.geass1127.workers.dev/";
+const WORKER = "https://seo-tool.geass1127.workers.dev/";
 
-let sitemapData = [];
+let data = [];
 
-async function fetchXml(url) {
-  const res = await fetch(url);
-  const text = await res.text();
-  const parser = new DOMParser();
-  return parser.parseFromString(text, "text/xml");
-}
+async function run() {
+  const url = document.getElementById("url").value.trim();
+  if (!url) return alert("URL入れてね");
 
-function uniqueArray(arr) {
-  return [...new Set(arr)];
-}
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
 
-function isLikelyPageUrl(url) {
-  try {
-    const u = new URL(url);
-    const path = u.pathname.toLowerCase();
+  status.innerText = "サイト構造取得中...";
+  result.innerHTML = "";
 
-    // いらないもの除外
-    if (
-      path.endsWith(".jpg") ||
-      path.endsWith(".jpeg") ||
-      path.endsWith(".png") ||
-      path.endsWith(".gif") ||
-      path.endsWith(".webp") ||
-      path.endsWith(".svg") ||
-      path.endsWith(".pdf") ||
-      path.endsWith(".xml") ||
-      path.endsWith(".mp4") ||
-      path.endsWith(".webm") ||
-      path.endsWith(".mov") ||
-      path.endsWith(".zip")
-    ) {
-      return false;
-    }
+  // ① URL一覧取得
+  const sitemapRes = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(url)}`);
+  const sitemapData = await sitemapRes.json();
 
-    return true;
-  } catch {
-    return false;
-  }
-}
+  const urls = sitemapData.urls || [];
+  status.innerText = `ページ取得中... (${urls.length}件)`;
 
-async function getPageUrlsFromSitemap(rootUrl) {
-  const cleanUrl = rootUrl.replace(/\/$/, "");
-  const rootSitemapUrl = cleanUrl + "/sitemap.xml";
+  data = [];
 
-  const rootXml = await fetchXml(rootSitemapUrl);
+  // ② 各ページ取得
+  for (const pageUrl of urls) {
+    const res = await fetch(`${WORKER}?url=${encodeURIComponent(pageUrl)}`);
+    const json = await res.json();
 
-  const sitemapNodes = [...rootXml.querySelectorAll("sitemap loc")];
-  const urlNodes = [...rootXml.querySelectorAll("url loc")];
+    data.push(json);
 
-  if (urlNodes.length > 0) {
-    return uniqueArray(
-      urlNodes.map(el => el.textContent.trim()).filter(isLikelyPageUrl)
-    );
+    render();
   }
 
-  if (sitemapNodes.length > 0) {
-    const childSitemapUrls = sitemapNodes.map(el => el.textContent.trim());
-    let allPageUrls = [];
-
-    for (const sitemapUrl of childSitemapUrls) {
-      try {
-        const childXml = await fetchXml(sitemapUrl);
-        const childUrls = [...childXml.querySelectorAll("url loc")]
-          .map(el => el.textContent.trim())
-          .filter(isLikelyPageUrl);
-
-        allPageUrls.push(...childUrls);
-      } catch (e) {
-        console.warn("子サイトマップ取得失敗:", sitemapUrl, e);
-      }
-    }
-
-    return uniqueArray(allPageUrls);
-  }
-
-  return [];
+  status.innerText = "完了";
 }
 
-function buildCopyText(items) {
-  return items.map(item => {
-    return `title: ${item.title || "なし"}
-url: ${item.url}
-description: ${item.description || "なし"}`;
-  }).join("\n\n");
-}
+// 表描画
+function render() {
+  const result = document.getElementById("result");
 
-function renderTable(items) {
-  if (!items.length) {
-    return '<div class="warn">表示できるページがありません</div>';
-  }
-
-  return `
-    <div class="table-wrap">
-      <table>
-        <thead>
+  result.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>URL</th>
+          <th>ディスクリプション</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
           <tr>
-            <th style="width: 28%;">タイトル</th>
-            <th style="width: 38%;">URL</th>
-            <th style="width: 34%;">ディスクリプション</th>
+            <td>${escape(d.title || "")}</td>
+            <td><a href="${escape(d.url)}" target="_blank">${escape(d.url)}</a></td>
+            <td>${escape(d.description || "")}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${items.map(item => `
-            <tr>
-              <td>${escapeHtml(item.title || "なし")}</td>
-              <td><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.url)}</a></td>
-              <td>${escapeHtml(item.description || "なし")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
+        `).join("")}
+      </tbody>
+    </table>
   `;
 }
 
-function escapeHtml(str = "") {
-  return str.replace(/[&<>"']/g, m => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[m]));
-}
-
-async function runSitemapCheck() {
-  const url = document.getElementById("url").value.trim();
-
-  if (!url) {
-    alert("URL入れてね！");
-    return;
-  }
-
-  const resultEl = document.getElementById("sitemapResult");
-  const copyTextEl = document.getElementById("copyText");
-
-  resultEl.innerHTML = "サイトマップ取得中...";
-  copyTextEl.textContent = "取得中...";
-
-  try {
-    let urls = await getPageUrlsFromSitemap(url);
-
-    urls = urls.slice(0, 30);
-
-    if (urls.length === 0) {
-      throw new Error("実ページURLが見つかりませんでした");
-    }
-
-    resultEl.innerHTML = `ページ情報取得中... (${urls.length}件)`;
-
-    sitemapData = [];
-
-    for (const pageUrl of urls) {
-      try {
-        const workerRes = await fetch(
-          WORKER_URL + "?url=" + encodeURIComponent(pageUrl)
-        );
-        const pageData = await workerRes.json();
-
-        sitemapData.push({
-          url: pageData.url || pageUrl,
-          title: pageData.title || "",
-          description: pageData.description || ""
-        });
-      } catch {
-        sitemapData.push({
-          url: pageUrl,
-          title: "",
-          description: ""
-        });
-      }
-    }
-
-    resultEl.innerHTML = renderTable(sitemapData);
-    copyTextEl.textContent = buildCopyText(sitemapData);
-
-  } catch (e) {
-    resultEl.innerHTML = `<div class="warn">取得できなかった（sitemapが無い / 実ページURLが取得できない / 制限あり）</div>`;
-    copyTextEl.textContent = "取得できませんでした";
-  }
-}
-
-document.getElementById("getMapBtn").addEventListener("click", runSitemapCheck);
-
-document.getElementById("url").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    runSitemapCheck();
-  }
-});
-
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  const text = document.getElementById("copyText").textContent;
-  if (!text || text === "まだ取得していません" || text === "取得中...") {
-    alert("まだコピーできる内容がないよ！");
-    return;
-  }
+// コピー
+document.getElementById("copyBtn").onclick = async () => {
+  const text = data.map(d =>
+`title: ${d.title}
+url: ${d.url}
+description: ${d.description}`
+  ).join("\n\n");
 
   await navigator.clipboard.writeText(text);
-  alert("一覧をコピーしたよ！");
+  alert("コピーしたよ！");
+};
+
+document.getElementById("runBtn").onclick = run;
+
+document.getElementById("url").addEventListener("keydown", e => {
+  if (e.key === "Enter") run();
 });
+
+// エスケープ
+function escape(str="") {
+  return str.replace(/[&<>"']/g, s => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[s]));
+}
 </script>
 
 </body>
