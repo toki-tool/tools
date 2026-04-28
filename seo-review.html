@@ -114,7 +114,6 @@ th, td {
 
 th { background:#f3f4ff; }
 
-/* 列幅 */
 th:nth-child(1), td:nth-child(1) { width:28%; }
 th:nth-child(2), td:nth-child(2) { width:22%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:50%; }
@@ -222,7 +221,6 @@ async function run() {
 
     render();
     updateSummary();
-    updateCopy();
   }
 
   status.innerText = "完了！";
@@ -260,50 +258,56 @@ function updateSummary() {
   `;
 }
 
-/* 🔥 CSV形式（確実に列分割される） */
-function updateCopy() {
-  let text = "タイトル,URL,ディスクリプション\n";
+/* 🔥最強コピー（HTML＋テキスト両対応） */
+document.getElementById("copyBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
 
-  text += data.map(d => {
-    const title = csvSafe(d.title);
-    const url = csvSafe(d.url);
-    const desc = csvSafe(d.description);
-    return `${title},${url},${desc}`;
-  }).join("\n");
+  const text = "タイトル\tURL\tディスクリプション\n" +
+    data.map(d =>
+      `${clean(d.title)}\t${clean(d.url)}\t${clean(d.description)}`
+    ).join("\n");
 
-  document.getElementById("copyText").innerText = text;
-}
+  const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th></tr>" +
+    data.map(d => `
+      <tr>
+        <td>${escapeHtml(d.title || "")}</td>
+        <td>${escapeHtml(d.url || "")}</td>
+        <td>${escapeHtml(d.description || "")}</td>
+      </tr>
+    `).join("") +
+    "</table>";
 
-function csvSafe(str = "") {
-  const s = String(str).replace(/"/g, '""');
-  return `"${s}"`;
-}
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([text], { type: "text/plain" }),
+        "text/html": new Blob([html], { type: "text/html" })
+      })
+    ]);
+  } catch {
+    await navigator.clipboard.writeText(text);
+  }
 
-document.getElementById("copyBtn").onclick = () => {
-  navigator.clipboard.writeText(document.getElementById("copyText").innerText);
   alert("コピーしたよ！");
 };
 
+function clean(str=""){
+  return String(str)
+    .replace(/\t/g," ")
+    .replace(/\r?\n/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
 document.getElementById("runBtn").onclick = run;
 
-/* Enterで実行 */
 urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
+  if (e.key === "Enter") run();
 });
 
 document.getElementById("promptBtn").onclick = async () => {
   if (!data.length) return alert("先に解析してね！");
-
-  let prompt = `【サイト】${siteUrl}\n\n`;
-
-  data.forEach(d => {
-    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
-  });
-
-  await navigator.clipboard.writeText(prompt);
+  await navigator.clipboard.writeText(JSON.stringify(data,null,2));
   alert("コピーした！");
 };
 
