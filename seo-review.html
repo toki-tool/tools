@@ -130,6 +130,18 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
 @media print {
   .no-print { display:none !important; }
   h1 { display:none !important; }
+
+  body { background:#fff; }
+
+  .card {
+    box-shadow:none;
+    border:1px solid #ccc;
+  }
+
+  th, td {
+    font-size:11px;
+    padding:7px;
+  }
 }
 </style>
 </head>
@@ -258,13 +270,13 @@ function updateSummary() {
   `;
 }
 
-/* 🔥最強コピー（HTML＋テキスト両対応） */
+/* スプレッドシート貼り付け対応コピー */
 document.getElementById("copyBtn").onclick = async () => {
   if (!data.length) return alert("先に解析してね！");
 
   const text = "タイトル\tURL\tディスクリプション\n" +
     data.map(d =>
-      `${clean(d.title)}\t${clean(d.url)}\t${clean(d.description)}`
+      `${cleanForSheet(d.title)}\t${cleanForSheet(d.url)}\t${cleanForSheet(d.description)}`
     ).join("\n");
 
   const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th></tr>" +
@@ -291,29 +303,83 @@ document.getElementById("copyBtn").onclick = async () => {
   alert("コピーしたよ！");
 };
 
-function clean(str=""){
+function cleanForSheet(str = "") {
   return String(str)
-    .replace(/\t/g," ")
-    .replace(/\r?\n/g," ")
-    .replace(/\s+/g," ")
+    .replace(/\t/g, " ")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 document.getElementById("runBtn").onclick = run;
 
 urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") run();
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
 });
 
+/* AI提案用プロンプト生成 */
 document.getElementById("promptBtn").onclick = async () => {
-  if (!data.length) return alert("先に解析してね！");
-  await navigator.clipboard.writeText(JSON.stringify(data,null,2));
-  alert("コピーした！");
+  if (!data.length) {
+    alert("先に解析してね！");
+    return;
+  }
+
+  const purpose = document.getElementById("purpose").value;
+  const custom = document.getElementById("customPurpose").value;
+
+  let prompt = "";
+
+  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\n";
+  prompt += "以下の現状サイト情報をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\n\n";
+
+  if (purpose) prompt += `【リニューアル目的】\n${purpose}\n\n`;
+  if (custom) prompt += `【追加目的】\n${custom}\n\n`;
+
+  prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
+  prompt += `【サイトURL】\n${siteUrl}\n\n`;
+
+  prompt += "【現状サイトマップ】\n";
+  data.forEach((d, i) => {
+    prompt += `${i + 1}. ${d.title || "タイトルなし"}\n`;
+    prompt += `URL: ${d.url}\n`;
+    prompt += `description: ${d.description || "なし"}\n\n`;
+  });
+
+  prompt += "【分析・提案してほしい内容】\n";
+  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\n\n";
+  prompt += "1. 現状サイト構造の課題\n";
+  prompt += "- 重複ページ\n";
+  prompt += "- 導線の弱さ\n";
+  prompt += "- SEO的に弱い構造\n\n";
+  prompt += "2. SEO観点で不足しているページ\n";
+  prompt += "- 検索流入を増やすために必要なコンテンツ\n\n";
+  prompt += "3. 統合・削除・整理した方がよいページ\n";
+  prompt += "- 重複や役割が曖昧なページ\n\n";
+  prompt += "4. リニューアル後の推奨サイトマップ\n";
+  prompt += "- 分かりやすい階層構造で提示\n\n";
+  prompt += "5. title / description の改善方針\n";
+  prompt += "- 検索キーワードを意識した方向性\n\n";
+  prompt += "6. 優先度付き改善提案\n";
+  prompt += "- すぐやるべき\n";
+  prompt += "- 中期\n";
+  prompt += "- 長期\n\n";
+  prompt += "7. クライアント向け説明文\n";
+  prompt += "- 専門用語を噛み砕いた提案文\n";
+
+  await navigator.clipboard.writeText(prompt);
+  alert("AI提案プロンプトをコピーしたよ！");
 };
 
-function escapeHtml(str=""){
-  return str.replace(/[&<>"']/g,s=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   }[s]));
 }
 </script>
