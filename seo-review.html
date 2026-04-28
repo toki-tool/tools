@@ -114,6 +114,7 @@ th, td {
 
 th { background:#f3f4ff; }
 
+/* 列幅 */
 th:nth-child(1), td:nth-child(1) { width:28%; }
 th:nth-child(2), td:nth-child(2) { width:22%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:50%; }
@@ -259,26 +260,23 @@ function updateSummary() {
   `;
 }
 
-/* 🔥スプシ完全対応 */
+/* 🔥 CSV形式（確実に列分割される） */
 function updateCopy() {
-  let text = "タイトル\tURL\tディスクリプション\n";
+  let text = "タイトル,URL,ディスクリプション\n";
 
   text += data.map(d => {
-    const title = cleanForSheet(d.title);
-    const url = cleanForSheet(d.url);
-    const desc = cleanForSheet(d.description);
-    return `${title}\t${url}\t${desc}`;
+    const title = csvSafe(d.title);
+    const url = csvSafe(d.url);
+    const desc = csvSafe(d.description);
+    return `${title},${url},${desc}`;
   }).join("\n");
 
   document.getElementById("copyText").innerText = text;
 }
 
-function cleanForSheet(str = "") {
-  return String(str)
-    .replace(/\t/g, " ")
-    .replace(/\r?\n/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function csvSafe(str = "") {
+  const s = String(str).replace(/"/g, '""');
+  return `"${s}"`;
 }
 
 document.getElementById("copyBtn").onclick = () => {
@@ -288,6 +286,7 @@ document.getElementById("copyBtn").onclick = () => {
 
 document.getElementById("runBtn").onclick = run;
 
+/* Enterで実行 */
 urlInput.addEventListener("keydown", e => {
   if (e.key === "Enter") {
     e.preventDefault();
