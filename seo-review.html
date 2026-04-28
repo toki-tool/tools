@@ -114,7 +114,6 @@ th, td {
 
 th { background:#f3f4ff; }
 
-/* セル幅：URL小さめ、ディスクリプション大きめ */
 th:nth-child(1), td:nth-child(1) { width:28%; }
 th:nth-child(2), td:nth-child(2) { width:22%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:50%; }
@@ -126,27 +125,11 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
   line-height:1.8;
 }
 
-.hidden-copy {
-  display:none;
-}
+.hidden-copy { display:none; }
 
 @media print {
   .no-print { display:none !important; }
   h1 { display:none !important; }
-
-  body {
-    background:#fff;
-  }
-
-  .card {
-    box-shadow:none;
-    border:1px solid #ccc;
-  }
-
-  th, td {
-    font-size:11px;
-    padding:7px;
-  }
 }
 </style>
 </head>
@@ -163,23 +146,17 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
 
   <select id="purpose">
     <option value="">リニューアル目的を選択</option>
-
     <option>SEO強化（検索流入増加）</option>
     <option>AIO対策（AI検索最適化）</option>
     <option>ローカルSEO強化（地域検索対策）</option>
-
     <option>問い合わせ増加（CV改善）</option>
     <option>採用強化（応募増加）</option>
-
     <option>ブランディング強化</option>
     <option>サービス理解向上（導線改善）</option>
-
     <option>コンテンツマーケ強化（記事SEO）</option>
     <option>リード獲得（BtoB対策）</option>
-
     <option>UI/UX改善（離脱率改善）</option>
     <option>サイト構造改善（情報整理）</option>
-
     <option>既存サイトの課題洗い出し</option>
   </select>
 
@@ -205,7 +182,6 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
   <div id="result"></div>
 </div>
 
-<!-- コピー用データは非表示。ボタンから直接コピーします -->
 <div id="copyText" class="hidden-copy"></div>
 
 </div>
@@ -228,22 +204,11 @@ async function run() {
   siteName = "";
 
   const status = document.getElementById("status");
-  const result = document.getElementById("result");
-  const summary = document.getElementById("summary");
-
   status.innerText = "取得中...";
-  result.innerHTML = "";
-  summary.innerHTML = "取得中...";
 
   const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
   const json = await res.json();
   const urls = json.urls || [];
-
-  if (!urls.length) {
-    status.innerText = "取得失敗";
-    summary.innerHTML = "取得できませんでした。";
-    return;
-  }
 
   for (let i = 0; i < urls.length; i++) {
     const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
@@ -252,7 +217,7 @@ async function run() {
     data.push(d);
     if (!siteName && d.title) siteName = d.title;
 
-    status.innerText = `取得中 (${i + 1}/${urls.length})`;
+    status.innerText = `取得中 (${i+1}/${urls.length})`;
 
     render();
     updateSummary();
@@ -294,30 +259,35 @@ function updateSummary() {
   `;
 }
 
-/* スプレッドシート貼り付け対応 */
+/* 🔥スプシ完全対応 */
 function updateCopy() {
   let text = "タイトル\tURL\tディスクリプション\n";
 
-  text += data.map(d =>
-    `"${(d.title || "").replace(/"/g,'""')}"\t"${d.url || ""}"\t"${(d.description || "").replace(/"/g,'""')}"`
-  ).join("\n");
+  text += data.map(d => {
+    const title = cleanForSheet(d.title);
+    const url = cleanForSheet(d.url);
+    const desc = cleanForSheet(d.description);
+    return `${title}\t${url}\t${desc}`;
+  }).join("\n");
 
   document.getElementById("copyText").innerText = text;
 }
 
-document.getElementById("copyBtn").onclick = () => {
-  if (!data.length) {
-    alert("先に解析してね！");
-    return;
-  }
+function cleanForSheet(str = "") {
+  return String(str)
+    .replace(/\t/g, " ")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
+document.getElementById("copyBtn").onclick = () => {
   navigator.clipboard.writeText(document.getElementById("copyText").innerText);
   alert("コピーしたよ！");
 };
 
 document.getElementById("runBtn").onclick = run;
 
-/* Enterで解析スタート */
 urlInput.addEventListener("keydown", e => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -325,67 +295,22 @@ urlInput.addEventListener("keydown", e => {
   }
 });
 
-/* AI提案用プロンプト生成 */
 document.getElementById("promptBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
 
-  if (!data.length) {
-    alert("先に解析してね！");
-    return;
-  }
+  let prompt = `【サイト】${siteUrl}\n\n`;
 
-  const purpose = document.getElementById("purpose").value;
-  const custom = document.getElementById("customPurpose").value;
-
-  let prompt = "";
-
-  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\n";
-  prompt += "以下の現状サイト情報をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\n\n";
-
-  if (purpose) prompt += `【リニューアル目的】\n${purpose}\n\n`;
-  if (custom) prompt += `【追加目的】\n${custom}\n\n`;
-
-  prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
-  prompt += `【サイトURL】\n${siteUrl}\n\n`;
-
-  prompt += "【現状サイトマップ】\n";
-  data.forEach((d, i) => {
-    prompt += `${i + 1}. ${d.title || "タイトルなし"}\n`;
-    prompt += `URL: ${d.url}\n`;
-    prompt += `description: ${d.description || "なし"}\n\n`;
+  data.forEach(d => {
+    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
   });
 
-  prompt += "【分析・提案してほしい内容】\n";
-  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\n\n";
-  prompt += "1. 現状サイト構造の課題\n";
-  prompt += "- 重複ページ\n";
-  prompt += "- 導線の弱さ\n";
-  prompt += "- SEO的に弱い構造\n\n";
-  prompt += "2. SEO観点で不足しているページ\n";
-  prompt += "- 検索流入を増やすために必要なコンテンツ\n\n";
-  prompt += "3. 統合・削除・整理した方がよいページ\n";
-  prompt += "- 重複や役割が曖昧なページ\n\n";
-  prompt += "4. リニューアル後の推奨サイトマップ\n";
-  prompt += "- 分かりやすい階層構造で提示\n\n";
-  prompt += "5. title / description の改善方針\n";
-  prompt += "- 検索キーワードを意識した方向性\n\n";
-  prompt += "6. 優先度付き改善提案\n";
-  prompt += "- すぐやるべき\n";
-  prompt += "- 中期\n";
-  prompt += "- 長期\n\n";
-  prompt += "7. クライアント向け説明文\n";
-  prompt += "- 専門用語を噛み砕いた提案文\n";
-
   await navigator.clipboard.writeText(prompt);
-  alert("AI提案用プロンプトをコピーしました！");
+  alert("コピーした！");
 };
 
-function escapeHtml(str = "") {
-  return String(str).replace(/[&<>"']/g, s => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+function escapeHtml(str=""){
+  return str.replace(/[&<>"']/g,s=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
   }[s]));
 }
 </script>
