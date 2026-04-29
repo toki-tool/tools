@@ -108,17 +108,89 @@ button {
   color:var(--sub);
 }
 
-.site-summary,
-.score-box {
+.site-summary {
   background:#f9f9ff;
   padding:14px;
   border-radius:12px;
   line-height:1.8;
 }
 
-.score-big {
-  font-size:34px;
+.score-layout {
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:20px;
+  align-items:center;
+}
+
+.score-circle {
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:auto;
+  background:conic-gradient(var(--accent) 0deg, #eef2ff 0deg);
+}
+
+.score-inner {
+  width:132px;
+  height:132px;
+  border-radius:50%;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.score-num {
+  font-size:40px;
+  font-weight:900;
+  line-height:1;
+}
+
+.score-label {
+  color:var(--sub);
+  font-size:13px;
+  margin-top:6px;
+}
+
+.score-comment {
+  font-size:18px;
   font-weight:800;
+  margin-bottom:12px;
+}
+
+.score-grid {
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:10px;
+}
+
+.score-item {
+  background:#f9f9ff;
+  border-radius:12px;
+  padding:12px;
+  line-height:1.6;
+}
+
+.score-item strong {
+  display:block;
+  font-size:18px;
+}
+
+.point-list {
+  margin-top:14px;
+  padding:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+
+.point-list div {
+  margin:6px 0;
 }
 
 .ok { color:var(--ok); font-weight:700; }
@@ -150,7 +222,15 @@ th:nth-child(2), td:nth-child(2) { width:20%; font-size:12px; }
 th:nth-child(3), td:nth-child(3) { width:38%; }
 th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
 
-.hidden-copy { display:none; }
+@media (max-width: 760px) {
+  .score-layout {
+    grid-template-columns:1fr;
+  }
+
+  .score-grid {
+    grid-template-columns:1fr;
+  }
+}
 
 @media print {
   .no-print { display:none !important; }
@@ -214,15 +294,13 @@ th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
 
 <div class="card">
   <h2>SEO簡易スコア</h2>
-  <div id="score" class="score-box">未取得</div>
+  <div id="score">未取得</div>
 </div>
 
 <div class="card">
   <h2>サイトマップ</h2>
   <div id="result"></div>
 </div>
-
-<div id="copyText" class="hidden-copy"></div>
 
 </div>
 
@@ -284,23 +362,15 @@ function normalizePageData(d, fallbackUrl) {
   const descriptionRaw = cleanText(d.description || "");
   const description = isBadDescription(descriptionRaw) ? "" : descriptionRaw;
 
-  return {
-    title,
-    url,
-    description,
-    status: d.status || ""
-  };
+  return { title, url, description, status: d.status || "" };
 }
 
 function isBadDescription(text = "") {
   const t = String(text).trim();
-
   if (!t) return true;
-
   if (/^https?:\/\//i.test(t)) return true;
   if (/wp-content\/uploads/i.test(t)) return true;
   if (/\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|pdf)(\?.*)?$/i.test(t)) return true;
-
   return false;
 }
 
@@ -332,7 +402,6 @@ function render() {
 
 function getRowChecks(d) {
   const checks = [];
-
   const title = d.title || "";
   const desc = d.description || "";
 
@@ -390,27 +459,74 @@ function updateScore() {
   duplicateScore -= duplicateUrls * 3;
   duplicateScore = Math.max(0, duplicateScore);
 
-  let score = Math.round(
-    titleSetScore +
-    descSetScore +
-    titleQualityScore +
-    descQualityScore +
-    duplicateScore
-  );
-
+  let score = Math.round(titleSetScore + descSetScore + titleQualityScore + descQualityScore + duplicateScore);
   score = Math.max(0, Math.min(100, score));
 
-  const scoreClass = score >= 80 ? "ok" : score >= 60 ? "warn" : "ng";
+  const status = getScoreStatus(score);
+  const deg = score * 3.6;
 
   document.getElementById("score").innerHTML = `
-    <div class="score-big ${scoreClass}">${score}点</div>
-    <div>title設定率：${titleSet} / ${total}</div>
-    <div>description設定率：${descSet} / ${total}</div>
-    <div>title文字数OK：${titleGood} / ${total}</div>
-    <div>description文字数OK：${descGood} / ${total}</div>
-    <div>重複title：${duplicateTitles}件</div>
-    <div>重複URL：${duplicateUrls}件</div>
+    <div class="score-layout">
+      <div class="score-circle" style="background:conic-gradient(${status.color} ${deg}deg, #eef2ff ${deg}deg);">
+        <div class="score-inner">
+          <div class="score-num ${status.className}">${score}</div>
+          <div class="score-label">/ 100</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="score-comment ${status.className}">${status.comment}</div>
+
+        <div class="score-grid">
+          <div class="score-item">
+            <strong>${titleSet} / ${total}</strong>
+            title設定率
+          </div>
+          <div class="score-item">
+            <strong>${descSet} / ${total}</strong>
+            description設定率
+          </div>
+          <div class="score-item">
+            <strong>${titleGood} / ${total}</strong>
+            title文字数OK
+          </div>
+          <div class="score-item">
+            <strong>${descGood} / ${total}</strong>
+            description文字数OK
+          </div>
+        </div>
+
+        <div class="point-list">
+          ${makeScoreAdvice({ noTitle: total - titleSet, noDesc: total - descSet, duplicateTitles, duplicateUrls })}
+        </div>
+      </div>
+    </div>
   `;
+}
+
+function getScoreStatus(score) {
+  if (score >= 80) {
+    return { className:"ok", color:"#1f8f5f", comment:"良好です。大きな問題は少なく、細部の改善でさらに伸ばせます。" };
+  }
+  if (score >= 60) {
+    return { className:"warn", color:"#b7791f", comment:"改善余地あり。titleやdescriptionを整えると伸びやすい状態です。" };
+  }
+  return { className:"ng", color:"#d64545", comment:"優先的な改善がおすすめ。基本情報の整理から着手すると効果が出やすいです。" };
+}
+
+function makeScoreAdvice(obj) {
+  const points = [];
+
+  if (obj.noTitle > 0) points.push(`<div class="ng">title未設定：${obj.noTitle}件</div>`);
+  if (obj.noDesc > 0) points.push(`<div class="ng">description未設定：${obj.noDesc}件</div>`);
+  if (obj.duplicateTitles > 0) points.push(`<div class="warn">重複title：${obj.duplicateTitles}件</div>`);
+  if (obj.duplicateUrls > 0) points.push(`<div class="warn">重複URL：${obj.duplicateUrls}件</div>`);
+
+  if (!points.length) {
+    points.push(`<div class="ok">大きな不足は少なめです。次は導線・コンテンツ設計の改善が有効です。</div>`);
+  }
+
+  return points.join("");
 }
 
 function countDuplicateExtras(arr) {
@@ -425,7 +541,6 @@ function normalizeUrl(url = "") {
   return String(url).replace(/\/$/, "");
 }
 
-/* スプレッドシート貼り付け対応コピー */
 document.getElementById("copyBtn").onclick = async () => {
   if (!data.length) return alert("先に解析してね！");
 
@@ -468,7 +583,6 @@ urlInput.addEventListener("keydown", e => {
   }
 });
 
-/* AI提案用プロンプト生成 */
 document.getElementById("promptBtn").onclick = async () => {
   if (!data.length) return alert("先に解析してね！");
 
