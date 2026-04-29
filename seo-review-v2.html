@@ -263,8 +263,10 @@ async function run() {
     const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
     const d = await r.json();
 
-    data.push(d);
-    if (!siteName && d.title) siteName = d.title;
+    const normalized = normalizePageData(d, urls[i]);
+
+    data.push(normalized);
+    if (!siteName && normalized.title) siteName = normalized.title;
 
     document.getElementById("status").innerText = `取得中 (${i+1}/${urls.length})`;
 
@@ -274,6 +276,32 @@ async function run() {
   }
 
   document.getElementById("status").innerText = "完了！";
+}
+
+function normalizePageData(d, fallbackUrl) {
+  const title = cleanText(d.title || "");
+  const url = d.url || fallbackUrl || "";
+  const descriptionRaw = cleanText(d.description || "");
+  const description = isBadDescription(descriptionRaw) ? "" : descriptionRaw;
+
+  return {
+    title,
+    url,
+    description,
+    status: d.status || ""
+  };
+}
+
+function isBadDescription(text = "") {
+  const t = String(text).trim();
+
+  if (!t) return true;
+
+  if (/^https?:\/\//i.test(t)) return true;
+  if (/wp-content\/uploads/i.test(t)) return true;
+  if (/\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|pdf)(\?.*)?$/i.test(t)) return true;
+
+  return false;
 }
 
 function render() {
@@ -309,13 +337,13 @@ function getRowChecks(d) {
   const desc = d.description || "";
 
   if (!title) checks.push('<div class="ng">titleなし</div>');
-  else if (title.length < 15) checks.push('<div class="warn">title短め</div>');
+  else if (title.length < 12) checks.push('<div class="warn">title短め</div>');
   else if (title.length > 70) checks.push('<div class="warn">title長め</div>');
   else checks.push('<div class="ok">title OK</div>');
 
   if (!desc) checks.push('<div class="ng">descriptionなし</div>');
-  else if (desc.length < 50) checks.push('<div class="warn">description短め</div>');
-  else if (desc.length > 160) checks.push('<div class="warn">description長め</div>');
+  else if (desc.length < 40) checks.push('<div class="warn">description短め</div>');
+  else if (desc.length > 180) checks.push('<div class="warn">description長め</div>');
   else checks.push('<div class="ok">description OK</div>');
 
   return checks.join("");
@@ -336,40 +364,61 @@ function updateScore() {
     return;
   }
 
-  const noTitle = data.filter(d => !d.title).length;
-  const noDesc = data.filter(d => !d.description).length;
-  const titleIssues = data.filter(d => d.title && (d.title.length < 15 || d.title.length > 70)).length;
-  const descIssues = data.filter(d => d.description && (d.description.length < 50 || d.description.length > 160)).length;
+  const titleSet = data.filter(d => d.title).length;
+  const descSet = data.filter(d => d.description).length;
 
-  const duplicateTitles = countDuplicates(data.map(d => d.title).filter(Boolean));
-  const duplicateUrls = countDuplicates(data.map(d => normalizeUrl(d.url)).filter(Boolean));
+  const titleGood = data.filter(d => {
+    const len = (d.title || "").length;
+    return len >= 12 && len <= 70;
+  }).length;
 
-  let score = 100;
-  score -= noTitle * 10;
-  score -= noDesc * 8;
-  score -= titleIssues * 3;
-  score -= descIssues * 3;
-  score -= duplicateTitles * 5;
-  score -= duplicateUrls * 5;
+  const descGood = data.filter(d => {
+    const len = (d.description || "").length;
+    return len >= 40 && len <= 180;
+  }).length;
+
+  const duplicateTitles = countDuplicateExtras(data.map(d => d.title).filter(Boolean));
+  const duplicateUrls = countDuplicateExtras(data.map(d => normalizeUrl(d.url)).filter(Boolean));
+
+  const titleSetScore = (titleSet / total) * 25;
+  const descSetScore = (descSet / total) * 25;
+  const titleQualityScore = (titleGood / total) * 15;
+  const descQualityScore = (descGood / total) * 15;
+
+  let duplicateScore = 20;
+  duplicateScore -= duplicateTitles * 3;
+  duplicateScore -= duplicateUrls * 3;
+  duplicateScore = Math.max(0, duplicateScore);
+
+  let score = Math.round(
+    titleSetScore +
+    descSetScore +
+    titleQualityScore +
+    descQualityScore +
+    duplicateScore
+  );
+
   score = Math.max(0, Math.min(100, score));
 
   const scoreClass = score >= 80 ? "ok" : score >= 60 ? "warn" : "ng";
 
   document.getElementById("score").innerHTML = `
     <div class="score-big ${scoreClass}">${score}点</div>
-    <div>title未設定：${noTitle}件</div>
-    <div>description未設定：${noDesc}件</div>
-    <div>title文字数注意：${titleIssues}件</div>
-    <div>description文字数注意：${descIssues}件</div>
+    <div>title設定率：${titleSet} / ${total}</div>
+    <div>description設定率：${descSet} / ${total}</div>
+    <div>title文字数OK：${titleGood} / ${total}</div>
+    <div>description文字数OK：${descGood} / ${total}</div>
     <div>重複title：${duplicateTitles}件</div>
     <div>重複URL：${duplicateUrls}件</div>
   `;
 }
 
-function countDuplicates(arr) {
+function countDuplicateExtras(arr) {
   const map = {};
   arr.forEach(v => map[v] = (map[v] || 0) + 1);
-  return Object.values(map).filter(count => count > 1).reduce((a, b) => a + b, 0);
+  return Object.values(map)
+    .filter(count => count > 1)
+    .reduce((sum, count) => sum + (count - 1), 0);
 }
 
 function normalizeUrl(url = "") {
@@ -463,6 +512,10 @@ document.getElementById("promptBtn").onclick = async () => {
   await navigator.clipboard.writeText(prompt);
   alert("AI提案プロンプトをコピーしたよ！");
 };
+
+function cleanText(str = "") {
+  return String(str).replace(/\s+/g, " ").trim();
+}
 
 function cleanForSheet(str = "") {
   return String(str)
