@@ -113,6 +113,7 @@ button {
   padding:14px;
   border-radius:12px;
   line-height:1.8;
+  overflow-wrap:anywhere;
 }
 
 .score-layout {
@@ -142,21 +143,25 @@ button {
   align-items:center;
   justify-content:center;
   flex-direction:column;
+  box-shadow:inset 0 0 0 1px var(--line);
 }
 
 .score-num {
   font-size:40px;
   font-weight:900;
+  line-height:1;
 }
 
 .score-label {
-  font-size:12px;
-  color:#666;
+  color:var(--sub);
+  font-size:13px;
+  margin-top:6px;
 }
 
 .score-comment {
   font-size:18px;
   font-weight:800;
+  margin-bottom:12px;
 }
 
 .score-grid {
@@ -169,33 +174,68 @@ button {
   background:#f9f9ff;
   border-radius:12px;
   padding:12px;
+  line-height:1.6;
+}
+
+.score-item strong {
+  display:block;
+  font-size:18px;
 }
 
 .point-list {
-  margin-top:10px;
-  padding:10px;
-  border:1px solid #eee;
-  border-radius:10px;
+  margin-top:14px;
+  padding:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
 }
 
-.ok { color:var(--ok); }
-.warn { color:var(--warn); }
-.ng { color:var(--ng); }
+.point-list div {
+  margin:6px 0;
+}
+
+.ok { color:var(--ok); font-weight:700; }
+.warn { color:var(--warn); font-weight:700; }
+.ng { color:var(--ng); font-weight:700; }
+
+.table-wrap {
+  overflow-x:auto;
+}
 
 table {
   width:100%;
   border-collapse:collapse;
+  table-layout:fixed;
 }
 
 th, td {
-  border:1px solid #eee;
+  border:1px solid #e5e7eb;
   padding:10px;
-  font-size:13px;
+  vertical-align:top;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
-th { background:#f3f4ff; }
+th {
+  background:#f3f4ff;
+}
 
-/* 🔥 印刷最適化（60%見え） */
+th:nth-child(1), td:nth-child(1) { width:24%; }
+th:nth-child(2), td:nth-child(2) { width:20%; font-size:12px; }
+th:nth-child(3), td:nth-child(3) { width:38%; }
+th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
+
+@media (max-width: 760px) {
+  .score-layout {
+    grid-template-columns:1fr;
+  }
+
+  .score-grid {
+    grid-template-columns:1fr;
+  }
+}
+
+/* PDF書き出し用：60%表示っぽく詰める */
 @media print {
   .no-print { display:none !important; }
   h1 { display:none !important; }
@@ -225,6 +265,12 @@ th { background:#f3f4ff; }
     margin:0 0 8px;
   }
 
+  .site-summary {
+    padding:8px;
+    font-size:10px;
+    line-height:1.6;
+  }
+
   .score-layout {
     grid-template-columns:130px 1fr;
     gap:12px;
@@ -250,6 +296,26 @@ th { background:#f3f4ff; }
 
   .score-comment {
     font-size:13px;
+    margin-bottom:8px;
+  }
+
+  .score-grid {
+    gap:6px;
+  }
+
+  .score-item {
+    padding:7px;
+    font-size:10px;
+  }
+
+  .score-item strong {
+    font-size:13px;
+  }
+
+  .point-list {
+    margin-top:8px;
+    padding:8px;
+    font-size:10px;
   }
 
   table {
@@ -260,6 +326,15 @@ th { background:#f3f4ff; }
     font-size:9px;
     padding:5px;
   }
+
+  th:nth-child(1), td:nth-child(1) { width:23%; }
+  th:nth-child(2), td:nth-child(2) { width:18%; font-size:8px; }
+  th:nth-child(3), td:nth-child(3) { width:41%; }
+  th:nth-child(4), td:nth-child(4) { width:18%; font-size:8px; }
+
+  tr {
+    page-break-inside:avoid;
+  }
 }
 </style>
 </head>
@@ -267,17 +342,49 @@ th { background:#f3f4ff; }
 <body>
 <div class="wrap">
 
-<a href="./" class="back no-print">← 戻る</a>
+<a href="./" class="back no-print">← ツール一覧に戻る</a>
 
-<h1 class="title">SEO解析ツール V2</h1>
+<h1 class="title">SEO解析ツール V2 <span class="badge">開発版</span></h1>
 
 <div class="card no-print">
   <input id="url" placeholder="https://example.com">
-  <button id="runBtn">解析する</button>
+
+  <select id="purpose">
+    <option value="">リニューアル目的を選択</option>
+    <option>SEO強化（検索流入増加）</option>
+    <option>AIO対策（AI検索最適化）</option>
+    <option>ローカルSEO強化（地域検索対策）</option>
+    <option>問い合わせ増加（CV改善）</option>
+    <option>採用強化（応募増加）</option>
+    <option>ブランディング強化</option>
+    <option>サービス理解向上（導線改善）</option>
+    <option>コンテンツマーケ強化（記事SEO）</option>
+    <option>リード獲得（BtoB対策）</option>
+    <option>UI/UX改善（離脱率改善）</option>
+    <option>サイト構造改善（情報整理）</option>
+    <option>既存サイトの課題洗い出し</option>
+  </select>
+
+  <input id="localArea" placeholder="対象地域（例：岐阜市 / 御前崎市）">
+  <input id="customPurpose" placeholder="その他の目的（自由入力）">
+
+  <div class="actions">
+    <button id="runBtn">解析する</button>
+    <button class="secondary" id="copyBtn">コピー</button>
+    <button class="secondary" onclick="window.print()">PDF</button>
+    <button class="secondary" id="promptBtn">AI提案用プロンプト生成</button>
+  </div>
+
+  <div id="status" class="status">未実行</div>
 </div>
 
 <div class="card">
-  <h2>SEOスコア</h2>
+  <h2>サイト情報</h2>
+  <div id="summary" class="site-summary">未取得</div>
+</div>
+
+<div class="card">
+  <h2>SEO簡易スコア</h2>
   <div id="score">未取得</div>
 </div>
 
@@ -289,7 +396,353 @@ th { background:#f3f4ff; }
 </div>
 
 <script>
-//（ここは省略：今のJSそのままでOK）
+const WORKER = "https://seo-tool.geass1127.workers.dev/";
+
+let data = [];
+let siteName = "";
+let siteUrl = "";
+
+const urlInput = document.getElementById("url");
+
+async function run() {
+  const input = urlInput.value.trim();
+  if (!input) return alert("URL入れてね");
+
+  siteUrl = input;
+  data = [];
+  siteName = "";
+
+  document.getElementById("status").innerText = "取得中...";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("summary").innerHTML = "取得中...";
+  document.getElementById("score").innerHTML = "取得中...";
+
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+  const json = await res.json();
+  const urls = json.urls || [];
+
+  if (!urls.length) {
+    document.getElementById("status").innerText = "取得失敗";
+    document.getElementById("summary").innerHTML = "取得できませんでした。";
+    document.getElementById("score").innerHTML = "スコアを算出できませんでした。";
+    return;
+  }
+
+  for (let i = 0; i < urls.length; i++) {
+    const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
+    const d = await r.json();
+
+    const normalized = normalizePageData(d, urls[i]);
+
+    data.push(normalized);
+    if (!siteName && normalized.title) siteName = normalized.title;
+
+    document.getElementById("status").innerText = `取得中 (${i+1}/${urls.length})`;
+
+    render();
+    updateSummary();
+    updateScore();
+  }
+
+  document.getElementById("status").innerText = "完了！";
+}
+
+function normalizePageData(d, fallbackUrl) {
+  const title = cleanText(d.title || "");
+  const url = d.url || fallbackUrl || "";
+  const descriptionRaw = cleanText(d.description || "");
+  const description = isBadDescription(descriptionRaw) ? "" : descriptionRaw;
+
+  return { title, url, description, status: d.status || "" };
+}
+
+function isBadDescription(text = "") {
+  const t = String(text).trim();
+  if (!t) return true;
+  if (/^https?:\/\//i.test(t)) return true;
+  if (/wp-content\/uploads/i.test(t)) return true;
+  if (/\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|pdf)(\?.*)?$/i.test(t)) return true;
+  return false;
+}
+
+function render() {
+  document.getElementById("result").innerHTML = `
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>URL</th>
+          <th>ディスクリプション</th>
+          <th>SEOチェック</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
+          <tr>
+            <td>${escapeHtml(d.title || "なし")}</td>
+            <td>${escapeHtml(d.url || "")}</td>
+            <td>${escapeHtml(d.description || "なし")}</td>
+            <td>${getRowChecks(d)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function getRowChecks(d) {
+  const checks = [];
+  const title = d.title || "";
+  const desc = d.description || "";
+
+  if (!title) checks.push('<div class="ng">titleなし</div>');
+  else if (title.length < 12) checks.push('<div class="warn">title短め</div>');
+  else if (title.length > 70) checks.push('<div class="warn">title長め</div>');
+  else checks.push('<div class="ok">title OK</div>');
+
+  if (!desc) checks.push('<div class="ng">descriptionなし</div>');
+  else if (desc.length < 40) checks.push('<div class="warn">description短め</div>');
+  else if (desc.length > 180) checks.push('<div class="warn">description長め</div>');
+  else checks.push('<div class="ok">description OK</div>');
+
+  return checks.join("");
+}
+
+function updateSummary() {
+  document.getElementById("summary").innerHTML = `
+    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
+    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
+    <div><strong>ページ数：</strong>${data.length}</div>
+  `;
+}
+
+function updateScore() {
+  const total = data.length;
+  if (!total) {
+    document.getElementById("score").innerHTML = "未取得";
+    return;
+  }
+
+  const titleSet = data.filter(d => d.title).length;
+  const descSet = data.filter(d => d.description).length;
+
+  const titleGood = data.filter(d => {
+    const len = (d.title || "").length;
+    return len >= 12 && len <= 70;
+  }).length;
+
+  const descGood = data.filter(d => {
+    const len = (d.description || "").length;
+    return len >= 40 && len <= 180;
+  }).length;
+
+  const duplicateTitles = countDuplicateExtras(data.map(d => d.title).filter(Boolean));
+  const duplicateUrls = countDuplicateExtras(data.map(d => normalizeUrl(d.url)).filter(Boolean));
+
+  const titleSetScore = (titleSet / total) * 25;
+  const descSetScore = (descSet / total) * 25;
+  const titleQualityScore = (titleGood / total) * 15;
+  const descQualityScore = (descGood / total) * 15;
+
+  let duplicateScore = 20;
+  duplicateScore -= duplicateTitles * 3;
+  duplicateScore -= duplicateUrls * 3;
+  duplicateScore = Math.max(0, duplicateScore);
+
+  let score = Math.round(titleSetScore + descSetScore + titleQualityScore + descQualityScore + duplicateScore);
+  score = Math.max(0, Math.min(100, score));
+
+  const status = getScoreStatus(score);
+  const deg = score * 3.6;
+
+  document.getElementById("score").innerHTML = `
+    <div class="score-layout">
+      <div class="score-circle" style="background:conic-gradient(${status.color} ${deg}deg, #eef2ff ${deg}deg);">
+        <div class="score-inner">
+          <div class="score-num ${status.className}">${score}</div>
+          <div class="score-label">/ 100</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="score-comment ${status.className}">${status.comment}</div>
+
+        <div class="score-grid">
+          <div class="score-item">
+            <strong>${titleSet} / ${total}</strong>
+            title設定率
+          </div>
+          <div class="score-item">
+            <strong>${descSet} / ${total}</strong>
+            description設定率
+          </div>
+          <div class="score-item">
+            <strong>${titleGood} / ${total}</strong>
+            title文字数OK
+          </div>
+          <div class="score-item">
+            <strong>${descGood} / ${total}</strong>
+            description文字数OK
+          </div>
+        </div>
+
+        <div class="point-list">
+          ${makeScoreAdvice({ noTitle: total - titleSet, noDesc: total - descSet, duplicateTitles, duplicateUrls })}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getScoreStatus(score) {
+  if (score >= 80) {
+    return { className:"ok", color:"#1f8f5f", comment:"良好です。大きな問題は少なく、細部の改善でさらに伸ばせます。" };
+  }
+  if (score >= 60) {
+    return { className:"warn", color:"#b7791f", comment:"改善余地あり。titleやdescriptionを整えると伸びやすい状態です。" };
+  }
+  return { className:"ng", color:"#d64545", comment:"優先的な改善がおすすめ。基本情報の整理から着手すると効果が出やすいです。" };
+}
+
+function makeScoreAdvice(obj) {
+  const points = [];
+
+  if (obj.noTitle > 0) points.push(`<div class="ng">title未設定：${obj.noTitle}件</div>`);
+  if (obj.noDesc > 0) points.push(`<div class="ng">description未設定：${obj.noDesc}件</div>`);
+  if (obj.duplicateTitles > 0) points.push(`<div class="warn">重複title：${obj.duplicateTitles}件</div>`);
+  if (obj.duplicateUrls > 0) points.push(`<div class="warn">重複URL：${obj.duplicateUrls}件</div>`);
+
+  if (!points.length) {
+    points.push(`<div class="ok">大きな不足は少なめです。次は導線・コンテンツ設計の改善が有効です。</div>`);
+  }
+
+  return points.join("");
+}
+
+function countDuplicateExtras(arr) {
+  const map = {};
+  arr.forEach(v => map[v] = (map[v] || 0) + 1);
+  return Object.values(map)
+    .filter(count => count > 1)
+    .reduce((sum, count) => sum + (count - 1), 0);
+}
+
+function normalizeUrl(url = "") {
+  return String(url).replace(/\/$/, "");
+}
+
+document.getElementById("copyBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
+
+  const text = "タイトル\tURL\tディスクリプション\tSEOチェック\n" +
+    data.map(d =>
+      `${cleanForSheet(d.title)}\t${cleanForSheet(d.url)}\t${cleanForSheet(d.description)}\t${cleanForSheet(stripHtml(getRowChecks(d)))}`
+    ).join("\n");
+
+  const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th><th>SEOチェック</th></tr>" +
+    data.map(d => `
+      <tr>
+        <td>${escapeHtml(d.title || "")}</td>
+        <td>${escapeHtml(d.url || "")}</td>
+        <td>${escapeHtml(d.description || "")}</td>
+        <td>${getRowChecks(d)}</td>
+      </tr>
+    `).join("") +
+    "</table>";
+
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([text], { type: "text/plain" }),
+        "text/html": new Blob([html], { type: "text/html" })
+      })
+    ]);
+  } catch {
+    await navigator.clipboard.writeText(text);
+  }
+
+  alert("コピーしたよ！");
+};
+
+document.getElementById("runBtn").onclick = run;
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
+document.getElementById("promptBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
+
+  const purpose = document.getElementById("purpose").value;
+  const custom = document.getElementById("customPurpose").value;
+  const area = document.getElementById("localArea").value;
+  const scoreText = document.getElementById("score").innerText;
+
+  let prompt = "";
+
+  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\n";
+  prompt += "以下の現状サイト情報とSEO簡易チェック結果をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\n\n";
+
+  if (purpose) prompt += `【リニューアル目的】\n${purpose}\n\n`;
+  if (custom) prompt += `【追加目的】\n${custom}\n\n`;
+  if (purpose.includes("ローカルSEO") && area) prompt += `【対象地域】\n${area}\n\n`;
+
+  prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
+  prompt += `【サイトURL】\n${siteUrl}\n\n`;
+
+  prompt += `【SEO簡易スコア】\n${scoreText}\n\n`;
+
+  prompt += "【現状サイトマップ】\n";
+  data.forEach((d, i) => {
+    prompt += `${i + 1}. ${d.title || "タイトルなし"}\n`;
+    prompt += `URL: ${d.url}\n`;
+    prompt += `description: ${d.description || "なし"}\n`;
+    prompt += `チェック: ${stripHtml(getRowChecks(d))}\n\n`;
+  });
+
+  prompt += "【分析・提案してほしい内容】\n";
+  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\n\n";
+  prompt += "1. 現状サイト構造の課題\n";
+  prompt += "2. title / description の改善優先度\n";
+  prompt += "3. SEO観点で不足しているページ\n";
+  prompt += "4. 統合・削除・整理した方がよいページ\n";
+  prompt += "5. リニューアル後の推奨サイトマップ\n";
+  prompt += "6. 優先度付き改善提案\n";
+  prompt += "7. クライアント向け説明文\n";
+
+  await navigator.clipboard.writeText(prompt);
+  alert("AI提案プロンプトをコピーしたよ！");
+};
+
+function cleanText(str = "") {
+  return String(str).replace(/\s+/g, " ").trim();
+}
+
+function cleanForSheet(str = "") {
+  return String(str)
+    .replace(/\t/g, " ")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stripHtml(str = "") {
+  return String(str).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[s]));
+}
 </script>
 
 </body>
