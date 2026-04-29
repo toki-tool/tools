@@ -17,17 +17,20 @@
   --accent-weak:#eef2ff;
   --shadow:0 10px 30px rgba(0,0,0,.08);
   --radius:18px;
+  --ok:#1f8f5f;
+  --warn:#b7791f;
+  --ng:#d64545;
 }
 
 body {
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic",sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   background:linear-gradient(180deg,#f8f9ff 0%,#f5f5fa 100%);
   color:var(--text);
 }
 
 .wrap {
-  max-width:1100px;
+  max-width:1160px;
   margin:0 auto;
   padding:32px 16px 48px;
 }
@@ -40,20 +43,21 @@ body {
   font-weight:700;
 }
 
-.back:hover {
-  text-decoration:underline;
-}
-
 .title {
   font-size:32px;
   font-weight:800;
-  margin:0 0 10px;
+  margin-bottom:10px;
 }
 
-.lead {
-  color:var(--sub);
-  line-height:1.7;
-  margin:0 0 20px;
+.badge {
+  display:inline-block;
+  margin-left:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--accent-weak);
+  color:var(--accent);
+  font-size:12px;
+  font-weight:700;
 }
 
 .card {
@@ -72,30 +76,23 @@ input, select {
   border:1px solid var(--line);
   margin-top:10px;
   font-size:16px;
-  background:#fff;
 }
 
-input:focus, select:focus {
-  border-color:var(--accent);
-  outline:none;
-  box-shadow:0 0 0 4px rgba(91,124,250,.12);
+button {
+  margin-top:10px;
+  padding:10px 14px;
+  border:none;
+  border-radius:999px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 .actions {
   display:flex;
   gap:10px;
   flex-wrap:wrap;
-  margin-top:12px;
-}
-
-button {
-  padding:10px 14px;
-  border:none;
-  border-radius:999px;
-  background:var(--accent);
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
 }
 
 .secondary {
@@ -104,20 +101,29 @@ button {
 }
 
 .status {
-  margin-top:12px;
-  padding:12px;
+  margin-top:10px;
+  padding:10px;
   background:#f9f9ff;
-  border-radius:12px;
+  border-radius:10px;
   color:var(--sub);
 }
 
-.site-summary {
-  line-height:1.8;
+.site-summary,
+.score-box {
   background:#f9f9ff;
   padding:14px;
   border-radius:12px;
-  overflow-wrap:anywhere;
+  line-height:1.8;
 }
+
+.score-big {
+  font-size:34px;
+  font-weight:800;
+}
+
+.ok { color:var(--ok); font-weight:700; }
+.warn { color:var(--warn); font-weight:700; }
+.ng { color:var(--ng); font-weight:700; }
 
 .table-wrap {
   overflow-x:auto;
@@ -127,75 +133,36 @@ table {
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  background:#fff;
-  font-size:14px;
 }
 
 th, td {
   border:1px solid #e5e7eb;
   padding:10px;
   vertical-align:top;
-  text-align:left;
   overflow-wrap:anywhere;
   word-break:break-word;
 }
 
-th {
-  background:#f3f4ff;
-  font-weight:700;
-}
+th { background:#f3f4ff; }
 
-th:nth-child(1), td:nth-child(1) { width:30%; }
-th:nth-child(2), td:nth-child(2) { width:25%; font-size:12px; }
-th:nth-child(3), td:nth-child(3) { width:45%; }
+th:nth-child(1), td:nth-child(1) { width:24%; }
+th:nth-child(2), td:nth-child(2) { width:20%; font-size:12px; }
+th:nth-child(3), td:nth-child(3) { width:38%; }
+th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
 
-td a {
-  color:var(--accent);
-  word-break:break-all;
-  overflow-wrap:anywhere;
-}
-
-.copy-area {
-  white-space:pre-wrap;
-  line-height:1.8;
-  font-size:14px;
-  background:#f9f9ff;
-  border-radius:12px;
-  padding:14px;
-  overflow-wrap:anywhere;
-  word-break:break-all;
-  max-width:100%;
-  overflow-x:hidden;
-}
-
-.badge {
-  display:inline-block;
-  margin-left:8px;
-  padding:4px 8px;
-  border-radius:999px;
-  background:var(--accent-weak);
-  color:var(--accent);
-  font-size:12px;
-  font-weight:700;
-}
+.hidden-copy { display:none; }
 
 @media print {
-  body { background:#fff; }
   .no-print { display:none !important; }
-
-  .wrap {
-    max-width:none;
-    padding:0;
-  }
-
+  h1 { display:none !important; }
+  body { background:#fff; }
   .card {
     box-shadow:none;
     border:1px solid #ccc;
   }
-
   th, td {
-    font-size:11px;
-    padding:7px;
+    font-size:10px;
+    padding:6px;
   }
 }
 </style>
@@ -207,23 +174,33 @@ td a {
 <a href="./" class="back no-print">← ツール一覧に戻る</a>
 
 <h1 class="title">SEO解析ツール V2 <span class="badge">開発版</span></h1>
-<p class="lead no-print">サイト構造・タイトル・ディスクリプションを取得し、AI提案用プロンプトを生成します。</p>
 
 <div class="card no-print">
   <input id="url" placeholder="https://example.com">
 
   <select id="purpose">
     <option value="">リニューアル目的を選択</option>
-    <option>SEO強化</option>
-    <option>採用強化</option>
-    <option>問い合わせ増加</option>
-    <option>ブランディング</option>
+    <option>SEO強化（検索流入増加）</option>
+    <option>AIO対策（AI検索最適化）</option>
+    <option>ローカルSEO強化（地域検索対策）</option>
+    <option>問い合わせ増加（CV改善）</option>
+    <option>採用強化（応募増加）</option>
+    <option>ブランディング強化</option>
+    <option>サービス理解向上（導線改善）</option>
+    <option>コンテンツマーケ強化（記事SEO）</option>
+    <option>リード獲得（BtoB対策）</option>
+    <option>UI/UX改善（離脱率改善）</option>
+    <option>サイト構造改善（情報整理）</option>
+    <option>既存サイトの課題洗い出し</option>
   </select>
+
+  <input id="localArea" placeholder="対象地域（例：岐阜市 / 御前崎市）">
+  <input id="customPurpose" placeholder="その他の目的（自由入力）">
 
   <div class="actions">
     <button id="runBtn">解析する</button>
-    <button class="secondary" id="copyBtn">一覧をコピー</button>
-    <button class="secondary" onclick="window.print()">PDF出力</button>
+    <button class="secondary" id="copyBtn">コピー</button>
+    <button class="secondary" onclick="window.print()">PDF</button>
     <button class="secondary" id="promptBtn">AI提案用プロンプト生成</button>
   </div>
 
@@ -236,14 +213,16 @@ td a {
 </div>
 
 <div class="card">
-  <h2>サイトマップ</h2>
-  <div id="result">解析結果がここに表示されます。</div>
+  <h2>SEO簡易スコア</h2>
+  <div id="score" class="score-box">未取得</div>
 </div>
 
-<div class="card no-print">
-  <h2>コピー用</h2>
-  <div id="copyText" class="copy-area">まだ取得していません。</div>
+<div class="card">
+  <h2>サイトマップ</h2>
+  <div id="result"></div>
 </div>
+
+<div id="copyText" class="hidden-copy"></div>
 
 </div>
 
@@ -255,170 +234,246 @@ let siteName = "";
 let siteUrl = "";
 
 const urlInput = document.getElementById("url");
-const statusEl = document.getElementById("status");
-const resultEl = document.getElementById("result");
-const summaryEl = document.getElementById("summary");
-const copyTextEl = document.getElementById("copyText");
 
 async function run() {
   const input = urlInput.value.trim();
-  if (!input) {
-    alert("URLを入力してね！");
-    urlInput.focus();
+  if (!input) return alert("URL入れてね");
+
+  siteUrl = input;
+  data = [];
+  siteName = "";
+
+  document.getElementById("status").innerText = "取得中...";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("summary").innerHTML = "取得中...";
+  document.getElementById("score").innerHTML = "取得中...";
+
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+  const json = await res.json();
+  const urls = json.urls || [];
+
+  if (!urls.length) {
+    document.getElementById("status").innerText = "取得失敗";
+    document.getElementById("summary").innerHTML = "取得できませんでした。";
+    document.getElementById("score").innerHTML = "スコアを算出できませんでした。";
     return;
   }
 
-  siteUrl = input;
-  siteName = "";
-  data = [];
+  for (let i = 0; i < urls.length; i++) {
+    const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
+    const d = await r.json();
 
-  resultEl.innerHTML = "";
-  summaryEl.innerHTML = "取得中...";
-  copyTextEl.innerText = "取得中...";
-  statusEl.innerText = "サイト構造取得中...";
+    data.push(d);
+    if (!siteName && d.title) siteName = d.title;
 
-  try {
-    const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
-    const json = await res.json();
-    const urls = json.urls || [];
+    document.getElementById("status").innerText = `取得中 (${i+1}/${urls.length})`;
 
-    if (!urls.length) {
-      statusEl.innerText = "取得失敗";
-      summaryEl.innerHTML = "ページURLを取得できませんでした。";
-      resultEl.innerHTML = "sitemap またはトップページ内リンクからページを見つけられませんでした。";
-      copyTextEl.innerText = "取得できませんでした。";
-      return;
-    }
-
-    statusEl.innerText = `ページ取得中 (0/${urls.length})`;
-
-    for (let i = 0; i < urls.length; i++) {
-      const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
-      const d = await r.json();
-
-      data.push({
-        title: d.title || "",
-        url: d.url || urls[i],
-        description: d.description || "",
-        status: d.status || ""
-      });
-
-      if (!siteName && d.title) siteName = d.title;
-
-      statusEl.innerText = `ページ取得中 (${i + 1}/${urls.length})`;
-
-      render();
-      updateSummary();
-      updateCopy();
-    }
-
-    statusEl.innerText = "完了！";
-  } catch (e) {
-    statusEl.innerText = "取得中にエラーが発生しました。";
-    summaryEl.innerHTML = "取得できませんでした。";
-    resultEl.innerHTML = escapeHtml(e.message);
-    copyTextEl.innerText = "取得できませんでした。";
+    render();
+    updateSummary();
+    updateScore();
   }
+
+  document.getElementById("status").innerText = "完了！";
 }
 
 function render() {
-  resultEl.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead>
+  document.getElementById("result").innerHTML = `
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>URL</th>
+          <th>ディスクリプション</th>
+          <th>SEOチェック</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
           <tr>
-            <th>タイトル</th>
-            <th>URL</th>
-            <th>ディスクリプション</th>
+            <td>${escapeHtml(d.title || "なし")}</td>
+            <td>${escapeHtml(d.url || "")}</td>
+            <td>${escapeHtml(d.description || "なし")}</td>
+            <td>${getRowChecks(d)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${data.map(d => `
-            <tr>
-              <td>${escapeHtml(d.title || "なし")}</td>
-              <td><a href="${escapeHtml(d.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(d.url)}</a></td>
-              <td>${escapeHtml(d.description || "なし")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+        `).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function getRowChecks(d) {
+  const checks = [];
+
+  const title = d.title || "";
+  const desc = d.description || "";
+
+  if (!title) checks.push('<div class="ng">titleなし</div>');
+  else if (title.length < 15) checks.push('<div class="warn">title短め</div>');
+  else if (title.length > 70) checks.push('<div class="warn">title長め</div>');
+  else checks.push('<div class="ok">title OK</div>');
+
+  if (!desc) checks.push('<div class="ng">descriptionなし</div>');
+  else if (desc.length < 50) checks.push('<div class="warn">description短め</div>');
+  else if (desc.length > 160) checks.push('<div class="warn">description長め</div>');
+  else checks.push('<div class="ok">description OK</div>');
+
+  return checks.join("");
 }
 
 function updateSummary() {
-  summaryEl.innerHTML = `
+  document.getElementById("summary").innerHTML = `
     <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
     <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
     <div><strong>ページ数：</strong>${data.length}</div>
   `;
 }
 
-function updateCopy() {
-  copyTextEl.innerText =
-    data.map(d => `title: ${d.title || "なし"}\nurl: ${d.url}\ndescription: ${d.description || "なし"}`).join("\n\n");
-}
-
-function copyList() {
-  if (!data.length) {
-    alert("まだコピーできる内容がないよ！");
+function updateScore() {
+  const total = data.length;
+  if (!total) {
+    document.getElementById("score").innerHTML = "未取得";
     return;
   }
 
-  navigator.clipboard.writeText(copyTextEl.innerText);
-  alert("一覧をコピーしたよ！");
+  const noTitle = data.filter(d => !d.title).length;
+  const noDesc = data.filter(d => !d.description).length;
+  const titleIssues = data.filter(d => d.title && (d.title.length < 15 || d.title.length > 70)).length;
+  const descIssues = data.filter(d => d.description && (d.description.length < 50 || d.description.length > 160)).length;
+
+  const duplicateTitles = countDuplicates(data.map(d => d.title).filter(Boolean));
+  const duplicateUrls = countDuplicates(data.map(d => normalizeUrl(d.url)).filter(Boolean));
+
+  let score = 100;
+  score -= noTitle * 10;
+  score -= noDesc * 8;
+  score -= titleIssues * 3;
+  score -= descIssues * 3;
+  score -= duplicateTitles * 5;
+  score -= duplicateUrls * 5;
+  score = Math.max(0, Math.min(100, score));
+
+  const scoreClass = score >= 80 ? "ok" : score >= 60 ? "warn" : "ng";
+
+  document.getElementById("score").innerHTML = `
+    <div class="score-big ${scoreClass}">${score}点</div>
+    <div>title未設定：${noTitle}件</div>
+    <div>description未設定：${noDesc}件</div>
+    <div>title文字数注意：${titleIssues}件</div>
+    <div>description文字数注意：${descIssues}件</div>
+    <div>重複title：${duplicateTitles}件</div>
+    <div>重複URL：${duplicateUrls}件</div>
+  `;
 }
 
-async function generatePrompt() {
-  if (!data.length) {
-    alert("先に解析してね！");
-    return;
+function countDuplicates(arr) {
+  const map = {};
+  arr.forEach(v => map[v] = (map[v] || 0) + 1);
+  return Object.values(map).filter(count => count > 1).reduce((a, b) => a + b, 0);
+}
+
+function normalizeUrl(url = "") {
+  return String(url).replace(/\/$/, "");
+}
+
+/* スプレッドシート貼り付け対応コピー */
+document.getElementById("copyBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
+
+  const text = "タイトル\tURL\tディスクリプション\tSEOチェック\n" +
+    data.map(d =>
+      `${cleanForSheet(d.title)}\t${cleanForSheet(d.url)}\t${cleanForSheet(d.description)}\t${cleanForSheet(stripHtml(getRowChecks(d)))}`
+    ).join("\n");
+
+  const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th><th>SEOチェック</th></tr>" +
+    data.map(d => `
+      <tr>
+        <td>${escapeHtml(d.title || "")}</td>
+        <td>${escapeHtml(d.url || "")}</td>
+        <td>${escapeHtml(d.description || "")}</td>
+        <td>${getRowChecks(d)}</td>
+      </tr>
+    `).join("") +
+    "</table>";
+
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([text], { type: "text/plain" }),
+        "text/html": new Blob([html], { type: "text/html" })
+      })
+    ]);
+  } catch {
+    await navigator.clipboard.writeText(text);
   }
+
+  alert("コピーしたよ！");
+};
+
+document.getElementById("runBtn").onclick = run;
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
+/* AI提案用プロンプト生成 */
+document.getElementById("promptBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
 
   const purpose = document.getElementById("purpose").value;
+  const custom = document.getElementById("customPurpose").value;
+  const area = document.getElementById("localArea").value;
+  const scoreText = document.getElementById("score").innerText;
 
   let prompt = "";
 
-  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\\n";
-  prompt += "以下の現状サイト情報をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\\n\\n";
+  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\n";
+  prompt += "以下の現状サイト情報とSEO簡易チェック結果をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\n\n";
 
-  if (purpose) {
-    prompt += `【リニューアル目的】\\n${purpose}\\n\\n`;
-  }
+  if (purpose) prompt += `【リニューアル目的】\n${purpose}\n\n`;
+  if (custom) prompt += `【追加目的】\n${custom}\n\n`;
+  if (purpose.includes("ローカルSEO") && area) prompt += `【対象地域】\n${area}\n\n`;
 
-  prompt += `【サイト名】\\n${siteName || "未取得"}\\n\\n`;
-  prompt += `【サイトURL】\\n${siteUrl}\\n\\n`;
+  prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
+  prompt += `【サイトURL】\n${siteUrl}\n\n`;
 
-  prompt += "【現状サイトマップ】\\n";
+  prompt += `【SEO簡易スコア】\n${scoreText}\n\n`;
+
+  prompt += "【現状サイトマップ】\n";
   data.forEach((d, i) => {
-    prompt += `${i + 1}. ${d.title || "タイトルなし"}\\n`;
-    prompt += `URL: ${d.url}\\n`;
-    prompt += `description: ${d.description || "なし"}\\n\\n`;
+    prompt += `${i + 1}. ${d.title || "タイトルなし"}\n`;
+    prompt += `URL: ${d.url}\n`;
+    prompt += `description: ${d.description || "なし"}\n`;
+    prompt += `チェック: ${stripHtml(getRowChecks(d))}\n\n`;
   });
 
-  prompt += "【分析・提案してほしい内容】\\n";
-  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\\n\\n";
-  prompt += "1. 現状サイト構造の課題\\n";
-  prompt += "- 重複ページ\\n";
-  prompt += "- 導線の弱さ\\n";
-  prompt += "- SEO的に弱い構造\\n\\n";
-  prompt += "2. SEO観点で不足しているページ\\n";
-  prompt += "- 検索流入を増やすために必要なコンテンツ\\n\\n";
-  prompt += "3. 統合・削除・整理した方がよいページ\\n";
-  prompt += "- 重複や役割が曖昧なページ\\n\\n";
-  prompt += "4. リニューアル後の推奨サイトマップ\\n";
-  prompt += "- 分かりやすい階層構造で提示\\n\\n";
-  prompt += "5. title / description の改善方針\\n";
-  prompt += "- 検索キーワードを意識した方向性\\n\\n";
-  prompt += "6. 優先度付き改善提案\\n";
-  prompt += "- すぐやるべき\\n";
-  prompt += "- 中期\\n";
-  prompt += "- 長期\\n\\n";
-  prompt += "7. クライアント向け説明文\\n";
-  prompt += "- 専門用語を噛み砕いた提案文\\n";
+  prompt += "【分析・提案してほしい内容】\n";
+  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\n\n";
+  prompt += "1. 現状サイト構造の課題\n";
+  prompt += "2. title / description の改善優先度\n";
+  prompt += "3. SEO観点で不足しているページ\n";
+  prompt += "4. 統合・削除・整理した方がよいページ\n";
+  prompt += "5. リニューアル後の推奨サイトマップ\n";
+  prompt += "6. 優先度付き改善提案\n";
+  prompt += "7. クライアント向け説明文\n";
 
   await navigator.clipboard.writeText(prompt);
-  alert("AI提案用プロンプトをコピーしました！");
+  alert("AI提案プロンプトをコピーしたよ！");
+};
+
+function cleanForSheet(str = "") {
+  return String(str)
+    .replace(/\t/g, " ")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stripHtml(str = "") {
+  return String(str).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function escapeHtml(str = "") {
@@ -430,17 +485,6 @@ function escapeHtml(str = "") {
     "'":"&#39;"
   }[s]));
 }
-
-document.getElementById("runBtn").addEventListener("click", run);
-document.getElementById("copyBtn").addEventListener("click", copyList);
-document.getElementById("promptBtn").addEventListener("click", generatePrompt);
-
-urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
-});
 </script>
 
 </body>
