@@ -399,6 +399,7 @@ let siteUrl = "";
 let totalFound = 0;
 let returnedCount = 0;
 let selectedLimit = 100;
+let errorCount = 0;
 
 const urlInput = document.getElementById("url");
 
@@ -413,43 +414,70 @@ async function run() {
   siteName = "";
   totalFound = 0;
   returnedCount = 0;
+  errorCount = 0;
 
   document.getElementById("status").innerText = "サイト構造を取得中...";
   document.getElementById("result").innerHTML = "";
   document.getElementById("summary").innerHTML = "取得中...";
   document.getElementById("score").innerHTML = "取得中...";
 
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${selectedLimit}`);
-  const json = await res.json();
-  const urls = json.urls || [];
+  try {
+    const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${selectedLimit}`);
+    const json = await res.json();
+    const urls = json.urls || [];
 
-  totalFound = json.totalFound || urls.length;
-  returnedCount = json.returned || urls.length;
+    totalFound = json.totalFound || urls.length;
+    returnedCount = json.returned || urls.length;
 
-  if (!urls.length) {
-    document.getElementById("status").innerText = "取得失敗";
-    document.getElementById("summary").innerHTML = "取得できませんでした。";
+    if (!urls.length) {
+      document.getElementById("status").innerText = "取得失敗";
+      document.getElementById("summary").innerHTML = "取得できませんでした。";
+      document.getElementById("score").innerHTML = "スコアを算出できませんでした。";
+      return;
+    }
+
+    for (let i = 0; i < urls.length; i++) {
+      const pageUrl = urls[i];
+
+      try {
+        const r = await fetch(`${WORKER}?url=${encodeURIComponent(pageUrl)}`);
+        const d = await r.json();
+        const normalized = normalizePageData(d, pageUrl);
+
+        data.push(normalized);
+
+        if (!siteName && normalized.title) {
+          siteName = normalized.title;
+        }
+
+      } catch (e) {
+        errorCount++;
+
+        data.push({
+          title: "取得失敗",
+          url: pageUrl,
+          description: "",
+          status: "",
+          error: e.message || "取得失敗"
+        });
+      }
+
+      document.getElementById("status").innerText =
+        `ページ情報を取得中 (${i + 1}/${urls.length}) / 失敗 ${errorCount}件`;
+
+      render();
+      updateSummary();
+      updateScore();
+    }
+
+    document.getElementById("status").innerText =
+      `完了！ ${data.length}件取得 / 失敗 ${errorCount}件`;
+
+  } catch (e) {
+    document.getElementById("status").innerText = "サイト構造の取得に失敗しました。";
+    document.getElementById("summary").innerHTML = escapeHtml(e.message || "取得失敗");
     document.getElementById("score").innerHTML = "スコアを算出できませんでした。";
-    return;
   }
-
-  for (let i = 0; i < urls.length; i++) {
-    const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
-    const d = await r.json();
-
-    const normalized = normalizePageData(d, urls[i]);
-
-    data.push(normalized);
-    if (!siteName && normalized.title) siteName = normalized.title;
-
-    document.getElementById("status").innerText = `ページ情報を取得中 (${i + 1}/${urls.length})`;
-
-    render();
-    updateSummary();
-    updateScore();
-  }
-
-  document.getElementById("status").innerText = "完了！";
 }
 
 function normalizePageData(d, fallbackUrl) {
@@ -458,7 +486,13 @@ function normalizePageData(d, fallbackUrl) {
   const descriptionRaw = cleanText(d.description || "");
   const description = isBadDescription(descriptionRaw) ? "" : descriptionRaw;
 
-  return { title, url, description, status: d.status || "" };
+  return {
+    title,
+    url,
+    description,
+    status: d.status || "",
+    error: d.error || ""
+  };
 }
 
 function isBadDescription(text = "") {
@@ -497,6 +531,10 @@ function render() {
 }
 
 function getRowChecks(d) {
+  if (d.error) {
+    return `<div class="ng">取得失敗</div>`;
+  }
+
   const checks = [];
   const title = d.title || "";
   const desc = d.description || "";
@@ -521,31 +559,34 @@ function updateSummary() {
     <div><strong>取得ページ数：</strong>${data.length}件</div>
     <div><strong>検出URL数：</strong>${totalFound}件</div>
     <div><strong>取得上限：</strong>${selectedLimit}件</div>
+    <div><strong>取得失敗：</strong>${errorCount}件</div>
   `;
 }
 
 function updateScore() {
-  const total = data.length;
+  const validData = data.filter(d => !d.error);
+  const total = validData.length;
+
   if (!total) {
-    document.getElementById("score").innerHTML = "未取得";
+    document.getElementById("score").innerHTML = "スコアを算出できませんでした。";
     return;
   }
 
-  const titleSet = data.filter(d => d.title).length;
-  const descSet = data.filter(d => d.description).length;
+  const titleSet = validData.filter(d => d.title).length;
+  const descSet = validData.filter(d => d.description).length;
 
-  const titleGood = data.filter(d => {
+  const titleGood = validData.filter(d => {
     const len = (d.title || "").length;
     return len >= 12 && len <= 70;
   }).length;
 
-  const descGood = data.filter(d => {
+  const descGood = validData.filter(d => {
     const len = (d.description || "").length;
     return len >= 40 && len <= 180;
   }).length;
 
-  const duplicateTitles = countDuplicateExtras(data.map(d => d.title).filter(Boolean));
-  const duplicateUrls = countDuplicateExtras(data.map(d => normalizeUrl(d.url)).filter(Boolean));
+  const duplicateTitles = countDuplicateExtras(validData.map(d => d.title).filter(Boolean));
+  const duplicateUrls = countDuplicateExtras(validData.map(d => normalizeUrl(d.url)).filter(Boolean));
 
   const titleSetScore = (titleSet / total) * 25;
   const descSetScore = (descSet / total) * 25;
@@ -583,7 +624,7 @@ function updateScore() {
         </div>
 
         <div class="point-list">
-          ${makeScoreAdvice({ noTitle: total - titleSet, noDesc: total - descSet, duplicateTitles, duplicateUrls })}
+          ${makeScoreAdvice({ noTitle: total - titleSet, noDesc: total - descSet, duplicateTitles, duplicateUrls, errorCount })}
         </div>
       </div>
     </div>
@@ -607,6 +648,7 @@ function makeScoreAdvice(obj) {
   if (obj.noDesc > 0) points.push(`<div class="ng">description未設定：${obj.noDesc}件</div>`);
   if (obj.duplicateTitles > 0) points.push(`<div class="warn">重複title：${obj.duplicateTitles}件</div>`);
   if (obj.duplicateUrls > 0) points.push(`<div class="warn">重複URL：${obj.duplicateUrls}件</div>`);
+  if (obj.errorCount > 0) points.push(`<div class="warn">取得失敗：${obj.errorCount}件</div>`);
 
   if (!points.length) {
     points.push(`<div class="ok">大きな不足は少なめです。次は導線・コンテンツ設計の改善が有効です。</div>`);
@@ -688,7 +730,7 @@ document.getElementById("promptBtn").onclick = async () => {
 
   prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
   prompt += `【サイトURL】\n${siteUrl}\n\n`;
-  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${selectedLimit}件\n\n`;
+  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${selectedLimit}件\n取得失敗：${errorCount}件\n\n`;
   prompt += `【SEO簡易スコア】\n${scoreText}\n\n`;
 
   prompt += "【現状サイトマップ】\n";
