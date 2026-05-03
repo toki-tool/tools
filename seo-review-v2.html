@@ -131,7 +131,6 @@ button {
   align-items:center;
   justify-content:center;
   margin:auto;
-  background:conic-gradient(var(--accent) 0deg, #eef2ff 0deg);
 }
 
 .score-inner {
@@ -216,9 +215,7 @@ th, td {
   word-break:break-word;
 }
 
-th {
-  background:#f3f4ff;
-}
+th { background:#f3f4ff; }
 
 th:nth-child(1), td:nth-child(1) { width:24%; }
 th:nth-child(2), td:nth-child(2) { width:20%; font-size:12px; }
@@ -226,16 +223,10 @@ th:nth-child(3), td:nth-child(3) { width:38%; }
 th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
 
 @media (max-width: 760px) {
-  .score-layout {
-    grid-template-columns:1fr;
-  }
-
-  .score-grid {
-    grid-template-columns:1fr;
-  }
+  .score-layout { grid-template-columns:1fr; }
+  .score-grid { grid-template-columns:1fr; }
 }
 
-/* PDF書き出し用：60%表示っぽく詰める */
 @media print {
   .no-print { display:none !important; }
   h1 { display:none !important; }
@@ -318,10 +309,6 @@ th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
     font-size:10px;
   }
 
-  table {
-    font-size:9px;
-  }
-
   th, td {
     font-size:9px;
     padding:5px;
@@ -348,6 +335,14 @@ th:nth-child(4), td:nth-child(4) { width:18%; font-size:13px; }
 
 <div class="card no-print">
   <input id="url" placeholder="https://example.com">
+
+  <select id="limit">
+    <option value="30">取得ページ数：30ページ（軽い）</option>
+    <option value="50">取得ページ数：50ページ</option>
+    <option value="100" selected>取得ページ数：100ページ（おすすめ）</option>
+    <option value="200">取得ページ数：200ページ（重い）</option>
+    <option value="500">取得ページ数：500ページ（かなり重い）</option>
+  </select>
 
   <select id="purpose">
     <option value="">リニューアル目的を選択</option>
@@ -401,6 +396,9 @@ const WORKER = "https://seo-tool.geass1127.workers.dev/";
 let data = [];
 let siteName = "";
 let siteUrl = "";
+let totalFound = 0;
+let returnedCount = 0;
+let selectedLimit = 100;
 
 const urlInput = document.getElementById("url");
 
@@ -408,18 +406,25 @@ async function run() {
   const input = urlInput.value.trim();
   if (!input) return alert("URL入れてね");
 
+  selectedLimit = document.getElementById("limit").value;
+
   siteUrl = input;
   data = [];
   siteName = "";
+  totalFound = 0;
+  returnedCount = 0;
 
-  document.getElementById("status").innerText = "取得中...";
+  document.getElementById("status").innerText = "サイト構造を取得中...";
   document.getElementById("result").innerHTML = "";
   document.getElementById("summary").innerHTML = "取得中...";
   document.getElementById("score").innerHTML = "取得中...";
 
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${selectedLimit}`);
   const json = await res.json();
   const urls = json.urls || [];
+
+  totalFound = json.totalFound || urls.length;
+  returnedCount = json.returned || urls.length;
 
   if (!urls.length) {
     document.getElementById("status").innerText = "取得失敗";
@@ -437,7 +442,7 @@ async function run() {
     data.push(normalized);
     if (!siteName && normalized.title) siteName = normalized.title;
 
-    document.getElementById("status").innerText = `取得中 (${i+1}/${urls.length})`;
+    document.getElementById("status").innerText = `ページ情報を取得中 (${i + 1}/${urls.length})`;
 
     render();
     updateSummary();
@@ -513,7 +518,9 @@ function updateSummary() {
   document.getElementById("summary").innerHTML = `
     <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
     <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
-    <div><strong>ページ数：</strong>${data.length}</div>
+    <div><strong>取得ページ数：</strong>${data.length}件</div>
+    <div><strong>検出URL数：</strong>${totalFound}件</div>
+    <div><strong>取得上限：</strong>${selectedLimit}件</div>
   `;
 }
 
@@ -569,22 +576,10 @@ function updateScore() {
         <div class="score-comment ${status.className}">${status.comment}</div>
 
         <div class="score-grid">
-          <div class="score-item">
-            <strong>${titleSet} / ${total}</strong>
-            title設定率
-          </div>
-          <div class="score-item">
-            <strong>${descSet} / ${total}</strong>
-            description設定率
-          </div>
-          <div class="score-item">
-            <strong>${titleGood} / ${total}</strong>
-            title文字数OK
-          </div>
-          <div class="score-item">
-            <strong>${descGood} / ${total}</strong>
-            description文字数OK
-          </div>
+          <div class="score-item"><strong>${titleSet} / ${total}</strong>title設定率</div>
+          <div class="score-item"><strong>${descSet} / ${total}</strong>description設定率</div>
+          <div class="score-item"><strong>${titleGood} / ${total}</strong>title文字数OK</div>
+          <div class="score-item"><strong>${descGood} / ${total}</strong>description文字数OK</div>
         </div>
 
         <div class="point-list">
@@ -693,7 +688,7 @@ document.getElementById("promptBtn").onclick = async () => {
 
   prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
   prompt += `【サイトURL】\n${siteUrl}\n\n`;
-
+  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${selectedLimit}件\n\n`;
   prompt += `【SEO簡易スコア】\n${scoreText}\n\n`;
 
   prompt += "【現状サイトマップ】\n";
