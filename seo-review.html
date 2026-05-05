@@ -17,6 +17,7 @@
   --accent-weak:#eef2ff;
   --shadow:0 10px 30px rgba(0,0,0,.08);
   --radius:18px;
+  --ng:#d64545;
 }
 
 body {
@@ -109,14 +110,9 @@ th, td {
   padding:10px;
   vertical-align:top;
   overflow-wrap:anywhere;
-  word-break:break-word;
 }
 
 th { background:#f3f4ff; }
-
-th:nth-child(1), td:nth-child(1) { width:28%; }
-th:nth-child(2), td:nth-child(2) { width:22%; font-size:12px; }
-th:nth-child(3), td:nth-child(3) { width:50%; }
 
 .site-summary {
   background:#f9f9ff;
@@ -125,7 +121,10 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
   line-height:1.8;
 }
 
-.hidden-copy { display:none; }
+.error {
+  color:var(--ng);
+  font-weight:bold;
+}
 
 @media print {
   .no-print { display:none !important; }
@@ -144,32 +143,10 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
 <div class="card no-print">
   <input id="url" placeholder="https://example.com">
 
-  <select id="purpose">
-    <option value="">リニューアル目的を選択</option>
-    <option>SEO強化（検索流入増加）</option>
-    <option>AIO対策（AI検索最適化）</option>
-    <option>ローカルSEO強化（地域検索対策）</option>
-    <option>問い合わせ増加（CV改善）</option>
-    <option>採用強化（応募増加）</option>
-    <option>ブランディング強化</option>
-    <option>サービス理解向上（導線改善）</option>
-    <option>コンテンツマーケ強化（記事SEO）</option>
-    <option>リード獲得（BtoB対策）</option>
-    <option>UI/UX改善（離脱率改善）</option>
-    <option>サイト構造改善（情報整理）</option>
-    <option>既存サイトの課題洗い出し</option>
-  </select>
-
-  <!-- 🔥地域入力 -->
-  <input id="localArea" placeholder="対象地域（例：岐阜市 / 御前崎市）">
-
-  <input id="customPurpose" placeholder="その他の目的（自由入力）">
-
   <div class="actions">
     <button id="runBtn">解析する</button>
     <button class="secondary" id="copyBtn">コピー</button>
     <button class="secondary" onclick="window.print()">PDF</button>
-    <button class="secondary" id="promptBtn">AI提案用プロンプト生成</button>
   </div>
 
   <div id="status" class="status">未実行</div>
@@ -185,8 +162,6 @@ th:nth-child(3), td:nth-child(3) { width:50%; }
   <div id="result"></div>
 </div>
 
-<div id="copyText" class="hidden-copy"></div>
-
 </div>
 
 <script>
@@ -195,6 +170,7 @@ const WORKER = "https://seo-tool.geass1127.workers.dev/";
 let data = [];
 let siteName = "";
 let siteUrl = "";
+let errorCount = 0;
 
 const urlInput = document.getElementById("url");
 
@@ -205,28 +181,48 @@ async function run() {
   siteUrl = input;
   data = [];
   siteName = "";
+  errorCount = 0;
 
   const status = document.getElementById("status");
-  status.innerText = "取得中...";
+  status.innerText = "サイト構造を取得中...";
 
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}`);
+  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=100`);
   const json = await res.json();
   const urls = json.urls || [];
 
+  if (!urls.length) {
+    status.innerText = "取得失敗";
+    return;
+  }
+
   for (let i = 0; i < urls.length; i++) {
-    const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
-    const d = await r.json();
+    const pageUrl = urls[i];
 
-    data.push(d);
-    if (!siteName && d.title) siteName = d.title;
+    try {
+      const r = await fetch(`${WORKER}?url=${encodeURIComponent(pageUrl)}`);
+      const d = await r.json();
 
-    status.innerText = `取得中 (${i+1}/${urls.length})`;
+      data.push(d);
+
+      if (!siteName && d.title) siteName = d.title;
+
+    } catch (e) {
+      errorCount++;
+
+      data.push({
+        title: "取得失敗",
+        url: pageUrl,
+        description: ""
+      });
+    }
+
+    status.innerText = `取得中 (${i+1}/${urls.length}) / 失敗 ${errorCount}`;
 
     render();
     updateSummary();
   }
 
-  status.innerText = "完了！";
+  status.innerText = `完了！ ${data.length}件 / 失敗 ${errorCount}`;
 }
 
 function render() {
@@ -257,11 +253,11 @@ function updateSummary() {
   document.getElementById("summary").innerHTML = `
     <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
     <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
-    <div><strong>ページ数：</strong>${data.length}</div>
+    <div><strong>取得ページ数：</strong>${data.length}</div>
+    <div><strong>取得失敗：</strong>${errorCount}</div>
   `;
 }
 
-/* コピー */
 document.getElementById("copyBtn").onclick = async () => {
   if (!data.length) return alert("先に解析してね！");
 
@@ -270,23 +266,7 @@ document.getElementById("copyBtn").onclick = async () => {
       `${clean(d.title)}\t${clean(d.url)}\t${clean(d.description)}`
     ).join("\n");
 
-  const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th></tr>" +
-    data.map(d => `
-      <tr>
-        <td>${escapeHtml(d.title || "")}</td>
-        <td>${escapeHtml(d.url || "")}</td>
-        <td>${escapeHtml(d.description || "")}</td>
-      </tr>
-    `).join("") +
-    "</table>";
-
-  await navigator.clipboard.write([
-    new ClipboardItem({
-      "text/plain": new Blob([text], { type: "text/plain" }),
-      "text/html": new Blob([html], { type: "text/html" })
-    })
-  ]);
-
+  await navigator.clipboard.writeText(text);
   alert("コピーしたよ！");
 };
 
@@ -299,32 +279,6 @@ document.getElementById("runBtn").onclick = run;
 urlInput.addEventListener("keydown", e => {
   if (e.key === "Enter") run();
 });
-
-/* 🔥AIプロンプト（地域対応） */
-document.getElementById("promptBtn").onclick = async () => {
-  if (!data.length) return alert("先に解析してね！");
-
-  const purpose = document.getElementById("purpose").value;
-  const custom = document.getElementById("customPurpose").value;
-  const area = document.getElementById("localArea").value;
-
-  let prompt = "あなたはSEO・Webコンサルタントです。\n\n";
-
-  if (purpose) prompt += `【目的】${purpose}\n\n`;
-  if (custom) prompt += `【追加目的】${custom}\n\n`;
-  if (purpose.includes("ローカルSEO") && area) {
-    prompt += `【対象地域】${area}\n\n`;
-  }
-
-  prompt += `【サイト】${siteUrl}\n\n`;
-
-  data.forEach(d => {
-    prompt += `${d.title}\n${d.url}\n${d.description}\n\n`;
-  });
-
-  await navigator.clipboard.writeText(prompt);
-  alert("コピーした！");
-};
 
 function escapeHtml(str=""){
   return str.replace(/[&<>"']/g,s=>({
