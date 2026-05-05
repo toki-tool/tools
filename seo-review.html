@@ -8,60 +8,171 @@
 <style>
 * { box-sizing: border-box; }
 
+:root {
+  --card:#fff;
+  --text:#222;
+  --sub:#666;
+  --line:#e7e7ef;
+  --accent:#5b7cfa;
+  --accent-weak:#eef2ff;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --radius:18px;
+}
+
 body {
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f5f6fb;
+  background:linear-gradient(180deg,#f8f9ff 0%,#f5f5fa 100%);
+  color:var(--text);
 }
 
 .wrap {
   max-width:1100px;
-  margin:auto;
-  padding:20px;
+  margin:0 auto;
+  padding:32px 16px 48px;
 }
 
-.card {
-  background:#fff;
-  padding:20px;
-  border-radius:16px;
+.back {
+  display:inline-block;
   margin-bottom:20px;
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:700;
 }
 
-input {
-  width:100%;
-  padding:10px;
+.title {
+  font-size:32px;
+  font-weight:800;
   margin-bottom:10px;
 }
 
+.card {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+
+input, select {
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  margin-top:10px;
+  font-size:16px;
+}
+
 button {
+  margin-top:10px;
   padding:10px 14px;
   border:none;
-  border-radius:20px;
-  background:#5b7cfa;
+  border-radius:999px;
+  background:var(--accent);
   color:#fff;
-  margin-right:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.secondary {
+  background:var(--accent-weak);
+  color:var(--accent);
 }
 
 .status {
   margin-top:10px;
+  padding:10px;
+  background:#f9f9ff;
+  border-radius:10px;
+  color:var(--sub);
+}
+
+.table-wrap {
+  overflow-x:auto;
 }
 
 table {
   width:100%;
   border-collapse:collapse;
+  table-layout:fixed;
 }
 
-td,th {
-  border:1px solid #eee;
-  padding:8px;
+th, td {
+  border:1px solid #e5e7eb;
+  padding:10px;
+  vertical-align:top;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
-/* 🔥 印刷最適化 */
+th { background:#f3f4ff; }
+
+th:nth-child(1), td:nth-child(1) { width:28%; }
+th:nth-child(2), td:nth-child(2) { width:22%; font-size:12px; }
+th:nth-child(3), td:nth-child(3) { width:50%; }
+
+.site-summary {
+  background:#f9f9ff;
+  padding:14px;
+  border-radius:12px;
+  line-height:1.8;
+}
+
+.hidden-copy { display:none; }
+
 @media print {
-  body { font-size:10px; }
-  .card { padding:10px; }
-  button { display:none; }
-  input { display:none; }
+  .no-print { display:none !important; }
+  h1 { display:none !important; }
+
+  body {
+    background:#fff;
+    font-size:10px;
+  }
+
+  .wrap {
+    max-width:none;
+    width:100%;
+    padding:0;
+  }
+
+  .card {
+    box-shadow:none;
+    border:1px solid #ccc;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+  }
+
+  h2 {
+    font-size:14px;
+    margin:0 0 8px;
+  }
+
+  .site-summary {
+    padding:8px;
+    font-size:10px;
+    line-height:1.6;
+  }
+
+  th, td {
+    font-size:9px;
+    padding:5px;
+  }
+
+  th:nth-child(1), td:nth-child(1) { width:27%; }
+  th:nth-child(2), td:nth-child(2) { width:20%; font-size:8px; }
+  th:nth-child(3), td:nth-child(3) { width:53%; }
+
+  tr {
+    page-break-inside:avoid;
+  }
 }
 </style>
 </head>
@@ -69,111 +180,286 @@ td,th {
 <body>
 <div class="wrap">
 
-<div class="card">
-<input id="url" placeholder="https://example.com">
+<a href="./" class="back no-print">← ツール一覧に戻る</a>
 
-<button onclick="run()">解析</button>
-<button onclick="copy()">コピー</button>
-<button onclick="makePrompt()">AI提案</button>
-<button onclick="window.print()">PDF</button>
+<h1 class="title">SEO解析ツール</h1>
 
-<div id="status" class="status"></div>
+<div class="card no-print">
+  <input id="url" placeholder="https://example.com">
+
+  <select id="purpose">
+    <option value="">リニューアル目的を選択</option>
+    <option>SEO強化（検索流入増加）</option>
+    <option>AIO対策（AI検索最適化）</option>
+    <option>ローカルSEO強化（地域検索対策）</option>
+    <option>問い合わせ増加（CV改善）</option>
+    <option>採用強化（応募増加）</option>
+    <option>ブランディング強化</option>
+    <option>サービス理解向上（導線改善）</option>
+    <option>コンテンツマーケ強化（記事SEO）</option>
+    <option>リード獲得（BtoB対策）</option>
+    <option>UI/UX改善（離脱率改善）</option>
+    <option>サイト構造改善（情報整理）</option>
+    <option>既存サイトの課題洗い出し</option>
+  </select>
+
+  <input id="localArea" placeholder="対象地域（例：岐阜市 / 御前崎市）">
+  <input id="customPurpose" placeholder="その他の目的（自由入力）">
+
+  <div class="actions">
+    <button id="runBtn">解析する</button>
+    <button class="secondary" id="copyBtn">コピー</button>
+    <button class="secondary" onclick="window.print()">PDF</button>
+    <button class="secondary" id="promptBtn">AI提案用プロンプト生成</button>
+  </div>
+
+  <div id="status" class="status">未実行</div>
 </div>
 
 <div class="card">
-<div id="summary"></div>
+  <h2>サイト情報</h2>
+  <div id="summary" class="site-summary">未取得</div>
 </div>
 
 <div class="card">
-<div id="result"></div>
+  <h2>サイトマップ</h2>
+  <div id="result"></div>
 </div>
+
+<div id="copyText" class="hidden-copy"></div>
 
 </div>
 
 <script>
 const WORKER = "https://seo-tool.geass1127.workers.dev/";
+const LIMIT = 200;
 
 let data = [];
-let siteUrl = "";
 let siteName = "";
+let siteUrl = "";
+let totalFound = 0;
 let errorCount = 0;
 
-async function run(){
-  const url = document.getElementById("url").value;
-  if(!url) return alert("URL入れてね");
+const urlInput = document.getElementById("url");
 
-  siteUrl = url;
+async function run() {
+  const input = urlInput.value.trim();
+  if (!input) return alert("URL入れてね");
+
+  siteUrl = input;
   data = [];
+  siteName = "";
+  totalFound = 0;
   errorCount = 0;
 
-  document.getElementById("status").innerText="サイト取得中...";
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+  const summary = document.getElementById("summary");
 
-  const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(url)}&limit=200`);
-  const json = await res.json();
-  const urls = json.urls || [];
+  status.innerText = "サイト構造を取得中...";
+  result.innerHTML = "";
+  summary.innerHTML = "取得中...";
 
-  for(let i=0;i<urls.length;i++){
-    try{
-      const r = await fetch(`${WORKER}?url=${encodeURIComponent(urls[i])}`);
-      const d = await r.json();
+  try {
+    const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${LIMIT}`);
+    const json = await res.json();
+    const urls = json.urls || [];
 
-      data.push(d);
-      if(!siteName && d.title) siteName=d.title;
+    totalFound = json.totalFound || urls.length;
 
-    }catch{
-      errorCount++;
-      data.push({title:"取得失敗",url:urls[i],description:""});
+    if (!urls.length) {
+      status.innerText = "取得失敗";
+      summary.innerHTML = "URLを取得できませんでした。";
+      return;
     }
 
-    document.getElementById("status").innerText=
-      `取得中 ${i+1}/${urls.length} 失敗:${errorCount}`;
+    for (let i = 0; i < urls.length; i++) {
+      const pageUrl = urls[i];
 
-    render();
-    summary();
+      try {
+        const r = await fetch(`${WORKER}?url=${encodeURIComponent(pageUrl)}`);
+        const d = await r.json();
+
+        const normalized = normalizePageData(d, pageUrl);
+        data.push(normalized);
+
+        if (!siteName && normalized.title) siteName = normalized.title;
+
+      } catch (e) {
+        errorCount++;
+
+        data.push({
+          title: "取得失敗",
+          url: pageUrl,
+          description: "",
+          error: e.message || "取得失敗"
+        });
+      }
+
+      status.innerText = `取得中 (${i + 1}/${urls.length}) / 失敗 ${errorCount}件`;
+
+      render();
+      updateSummary();
+    }
+
+    status.innerText = `完了！ ${data.length}件取得 / 失敗 ${errorCount}件`;
+
+  } catch (e) {
+    status.innerText = "取得に失敗しました。";
+    summary.innerHTML = escapeHtml(e.message || "取得失敗");
   }
-
-  document.getElementById("status").innerText="完了";
 }
 
-function render(){
-  document.getElementById("result").innerHTML=`
-  <table>
-    <tr><th>タイトル</th><th>URL</th><th>description</th></tr>
-    ${data.map(d=>`
-      <tr>
-        <td>${d.title||""}</td>
-        <td>${d.url||""}</td>
-        <td>${d.description||""}</td>
-      </tr>
-    `).join("")}
-  </table>`;
+function normalizePageData(d, fallbackUrl) {
+  return {
+    title: cleanText(d.title || ""),
+    url: d.url || fallbackUrl || "",
+    description: cleanText(d.description || ""),
+    error: d.error || ""
+  };
 }
 
-function summary(){
-  document.getElementById("summary").innerHTML=`
-  サイト名：${siteName}<br>
-  URL：${siteUrl}<br>
-  取得：${data.length}<br>
-  失敗：${errorCount}
+function render() {
+  document.getElementById("result").innerHTML = `
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>URL</th>
+          <th>ディスクリプション</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
+          <tr>
+            <td>${escapeHtml(d.title || "なし")}</td>
+            <td>${escapeHtml(d.url || "")}</td>
+            <td>${escapeHtml(d.description || "なし")}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function updateSummary() {
+  document.getElementById("summary").innerHTML = `
+    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
+    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
+    <div><strong>取得ページ数：</strong>${data.length}件</div>
+    <div><strong>検出URL数：</strong>${totalFound}件</div>
+    <div><strong>取得上限：</strong>${LIMIT}件</div>
+    <div><strong>取得失敗：</strong>${errorCount}件</div>
   `;
 }
 
-function copy(){
-  const text=data.map(d=>`${d.title}\t${d.url}\t${d.description}`).join("\n");
-  navigator.clipboard.writeText(text);
-  alert("コピーしたよ");
-}
+/* スプレッドシート貼り付け対応コピー */
+document.getElementById("copyBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
 
-function makePrompt(){
-  let text="SEO改善提案を作成してください\n\n";
-  text+="URL:"+siteUrl+"\n\n";
+  const text = "タイトル\tURL\tディスクリプション\n" +
+    data.map(d =>
+      `${cleanForSheet(d.title)}\t${cleanForSheet(d.url)}\t${cleanForSheet(d.description)}`
+    ).join("\n");
 
-  data.forEach(d=>{
-    text+=`${d.title}\n${d.url}\n${d.description}\n\n`;
+  const html = "<table><tr><th>タイトル</th><th>URL</th><th>ディスクリプション</th></tr>" +
+    data.map(d => `
+      <tr>
+        <td>${escapeHtml(d.title || "")}</td>
+        <td>${escapeHtml(d.url || "")}</td>
+        <td>${escapeHtml(d.description || "")}</td>
+      </tr>
+    `).join("") +
+    "</table>";
+
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([text], { type: "text/plain" }),
+        "text/html": new Blob([html], { type: "text/html" })
+      })
+    ]);
+  } catch {
+    await navigator.clipboard.writeText(text);
+  }
+
+  alert("コピーしたよ！");
+};
+
+document.getElementById("runBtn").onclick = run;
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
+/* AI提案用プロンプト生成 */
+document.getElementById("promptBtn").onclick = async () => {
+  if (!data.length) return alert("先に解析してね！");
+
+  const purpose = document.getElementById("purpose").value;
+  const custom = document.getElementById("customPurpose").value;
+  const area = document.getElementById("localArea").value;
+
+  let prompt = "";
+
+  prompt += "あなたはSEO・Webマーケティング・UI/UX改善に精通したWebコンサルタントです。\n";
+  prompt += "以下の現状サイト情報をもとに、実務で使えるレベルの具体的な改善提案を作成してください。\n\n";
+
+  if (purpose) prompt += `【リニューアル目的】\n${purpose}\n\n`;
+  if (custom) prompt += `【追加目的】\n${custom}\n\n`;
+  if (purpose.includes("ローカルSEO") && area) {
+    prompt += `【対象地域】\n${area}\n\n`;
+  }
+
+  prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
+  prompt += `【サイトURL】\n${siteUrl}\n\n`;
+  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${LIMIT}件\n取得失敗：${errorCount}件\n\n`;
+
+  prompt += "【現状サイトマップ】\n";
+  data.forEach((d, i) => {
+    prompt += `${i + 1}. ${d.title || "タイトルなし"}\n`;
+    prompt += `URL: ${d.url}\n`;
+    prompt += `description: ${d.description || "なし"}\n\n`;
   });
 
-  navigator.clipboard.writeText(text);
-  alert("AIプロンプトコピーしたよ");
+  prompt += "【分析・提案してほしい内容】\n";
+  prompt += "以下の項目について、具体的かつ実務的な内容で提案してください。\n\n";
+  prompt += "1. 現状サイト構造の課題\n";
+  prompt += "2. SEO観点で不足しているページ\n";
+  prompt += "3. 統合・削除・整理した方がよいページ\n";
+  prompt += "4. リニューアル後の推奨サイトマップ\n";
+  prompt += "5. title / description の改善方針\n";
+  prompt += "6. 優先度付き改善提案\n";
+  prompt += "7. クライアント向け説明文\n";
+
+  await navigator.clipboard.writeText(prompt);
+  alert("AI提案プロンプトをコピーしたよ！");
+};
+
+function cleanText(str = "") {
+  return String(str).replace(/\s+/g, " ").trim();
+}
+
+function cleanForSheet(str = "") {
+  return String(str)
+    .replace(/\t/g, " ")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[s]));
 }
 </script>
 
