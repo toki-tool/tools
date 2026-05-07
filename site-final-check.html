@@ -289,7 +289,7 @@ function render(data, companyDomain) {
         ${item("送信ボタン", form.submitCount > 0 ? `OK：${form.submitCount}個検出` : "注意：submit未検出", form.submitCount > 0 ? "ok" : "warn")}
         ${item("Contact Form 7", form.hasCF7 ? "検出あり" : "検出なし", form.hasCF7 ? "ok" : "warn")}
         ${item("MW WP Form", form.hasMW ? "検出あり" : "検出なし", form.hasMW ? "ok" : "warn")}
-        ${item("reCAPTCHA", form.hasRecaptcha ? "検出あり" : "検出なし", form.hasRecaptcha ? "ok" : "warn")}
+        ${item("reCAPTCHA", form.hasRecaptcha ? "検出あり" : "未検出", form.hasRecaptcha ? "ok" : "warn")}
         ${item("mailto", (form.mailtos || []).length ? form.mailtos.join("<br>") : "検出なし", (form.mailtos || []).length ? "warn" : "ok")}
       </div>
 
