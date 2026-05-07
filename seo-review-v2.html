@@ -607,14 +607,12 @@ function getRowChecks(d) {
 
 function updateSummary() {
   document.getElementById("summary").innerHTML = `
-    <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
-    <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
-    <div><strong>取得ページ数：</strong>${data.length}件</div>
-    <div><strong>検出URL数：</strong>${totalFound}件</div>
-    <div><strong>重複除外後：</strong>${returnedCount}件</div>
-    <div><strong>取得上限：</strong>${selectedLimit}件</div>
-    <div><strong>取得失敗：</strong>${errorCount}件</div>
-  `;
+  <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
+  <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
+  <div><strong>取得ページ数：</strong>${data.length}件</div>
+  <div><strong>取得上限：</strong>${selectedLimit}件</div>
+  <div><strong>取得失敗：</strong>${errorCount}件</div>
+`;
 }
 
 function updateScore() {
