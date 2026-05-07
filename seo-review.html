@@ -237,7 +237,6 @@ const LIMIT = 200;
 let data = [];
 let siteName = "";
 let siteUrl = "";
-let totalFound = 0;
 let errorCount = 0;
 
 const urlInput = document.getElementById("url");
@@ -249,7 +248,6 @@ async function run() {
   siteUrl = input;
   data = [];
   siteName = "";
-  totalFound = 0;
   errorCount = 0;
 
   const status = document.getElementById("status");
@@ -263,9 +261,20 @@ async function run() {
   try {
     const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${LIMIT}`);
     const json = await res.json();
-    const urls = json.urls || [];
 
-    totalFound = json.totalFound || urls.length;
+    const rawUrls = json.urls || [];
+
+    const normalizedMap = new Map();
+
+    rawUrls.forEach(url => {
+      const key = normalizeUrl(url);
+
+      if (!normalizedMap.has(key)) {
+        normalizedMap.set(key, key);
+      }
+    });
+
+    const urls = [...normalizedMap.values()];
 
     if (!urls.length) {
       status.innerText = "取得失敗";
@@ -313,10 +322,28 @@ async function run() {
 function normalizePageData(d, fallbackUrl) {
   return {
     title: cleanText(d.title || ""),
-    url: d.url || fallbackUrl || "",
+    url: normalizeUrl(d.url || fallbackUrl || ""),
     description: cleanText(d.description || ""),
     error: d.error || ""
   };
+}
+
+function normalizeUrl(url = "") {
+  const str = String(url).trim();
+  if (!str) return "";
+
+  try {
+    const u = new URL(str);
+    let path = u.pathname;
+
+    if (path !== "/" && path.endsWith("/")) {
+      path = path.slice(0, -1);
+    }
+
+    return `${u.origin}${path}`;
+  } catch {
+    return str.replace(/\/$/, "");
+  }
 }
 
 function render() {
@@ -348,7 +375,6 @@ function updateSummary() {
     <div><strong>サイト名：</strong>${escapeHtml(siteName || "未取得")}</div>
     <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
     <div><strong>取得ページ数：</strong>${data.length}件</div>
-    <div><strong>検出URL数：</strong>${totalFound}件</div>
     <div><strong>取得上限：</strong>${LIMIT}件</div>
     <div><strong>取得失敗：</strong>${errorCount}件</div>
   `;
@@ -417,7 +443,7 @@ document.getElementById("promptBtn").onclick = async () => {
 
   prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
   prompt += `【サイトURL】\n${siteUrl}\n\n`;
-  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${LIMIT}件\n取得失敗：${errorCount}件\n\n`;
+  prompt += `【取得状況】\n取得ページ数：${data.length}件\n取得上限：${LIMIT}件\n取得失敗：${errorCount}件\n\n`;
 
   prompt += "【現状サイトマップ】\n";
   data.forEach((d, i) => {
