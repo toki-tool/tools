@@ -445,10 +445,23 @@ async function run() {
   try {
     const res = await fetch(`${WORKER}?mode=sitemap&url=${encodeURIComponent(input)}&limit=${selectedLimit}`);
     const json = await res.json();
-    const urls = json.urls || [];
 
-    totalFound = json.totalFound || urls.length;
-    returnedCount = json.returned || urls.length;
+    const rawUrls = json.urls || [];
+
+    const normalizedMap = new Map();
+
+    rawUrls.forEach(url => {
+      const key = normalizeUrl(url);
+
+      if (!normalizedMap.has(key)) {
+        normalizedMap.set(key, key);
+      }
+    });
+
+    const urls = [...normalizedMap.values()];
+
+    totalFound = json.totalFound || rawUrls.length;
+    returnedCount = urls.length;
 
     if (!urls.length) {
       document.getElementById("status").innerText = "取得失敗";
@@ -522,7 +535,7 @@ function updateProgress(percent) {
 
 function normalizePageData(d, fallbackUrl) {
   const title = cleanText(d.title || "");
-  const url = d.url || fallbackUrl || "";
+  const url = normalizeUrl(d.url || fallbackUrl || "");
   const descriptionRaw = cleanText(d.description || "");
   const description = isBadDescription(descriptionRaw) ? "" : descriptionRaw;
 
@@ -598,6 +611,7 @@ function updateSummary() {
     <div><strong>URL：</strong>${escapeHtml(siteUrl)}</div>
     <div><strong>取得ページ数：</strong>${data.length}件</div>
     <div><strong>検出URL数：</strong>${totalFound}件</div>
+    <div><strong>重複除外後：</strong>${returnedCount}件</div>
     <div><strong>取得上限：</strong>${selectedLimit}件</div>
     <div><strong>取得失敗：</strong>${errorCount}件</div>
   `;
@@ -706,7 +720,21 @@ function countDuplicateExtras(arr) {
 }
 
 function normalizeUrl(url = "") {
-  return String(url).replace(/\/$/, "");
+  const str = String(url).trim();
+  if (!str) return "";
+
+  try {
+    const u = new URL(str);
+    let path = u.pathname;
+
+    if (path !== "/" && path.endsWith("/")) {
+      path = path.slice(0, -1);
+    }
+
+    return `${u.origin}${path}`;
+  } catch {
+    return str.replace(/\/$/, "");
+  }
 }
 
 document.getElementById("copyBtn").onclick = async () => {
@@ -770,7 +798,7 @@ document.getElementById("promptBtn").onclick = async () => {
 
   prompt += `【サイト名】\n${siteName || "未取得"}\n\n`;
   prompt += `【サイトURL】\n${siteUrl}\n\n`;
-  prompt += `【取得状況】\n検出URL数：${totalFound}件\n取得ページ数：${data.length}件\n取得上限：${selectedLimit}件\n取得失敗：${errorCount}件\n\n`;
+  prompt += `【取得状況】\n検出URL数：${totalFound}件\n重複除外後：${returnedCount}件\n取得ページ数：${data.length}件\n取得上限：${selectedLimit}件\n取得失敗：${errorCount}件\n\n`;
   prompt += `【SEO簡易スコア】\n${scoreText}\n\n`;
 
   prompt += "【現状サイトマップ】\n";
