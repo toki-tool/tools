@@ -167,7 +167,7 @@ pre {
 
 <h1 class="title">公開前チェックツール</h1>
 <p class="lead no-print">
-  公開URLからSEO・フォーム・基本設定を確認します。
+  公開URLからSEO・基本設定を確認します。
 </p>
 
 <div class="card no-print">
@@ -283,14 +283,12 @@ function render(data, companyDomain) {
     </div>
 
     <div class="card">
-      <h2>フォームチェック</h2>
+      <h2>フォーム検出情報（参考）</h2>
+
       <div class="grid">
-        ${item("フォーム", form.formCount > 0 ? `OK：${form.formCount}個検出` : "注意：formタグ未検出", form.formCount > 0 ? "ok" : "warn")}
-        ${item("送信ボタン", form.submitCount > 0 ? `OK：${form.submitCount}個検出` : "注意：submit未検出", form.submitCount > 0 ? "ok" : "warn")}
+        ${item("フォーム", form.formCount > 0 ? `OK：${form.formCount}個検出` : "検出なし", form.formCount > 0 ? "ok" : "warn")}
         ${item("Contact Form 7", form.hasCF7 ? "検出あり" : "検出なし", form.hasCF7 ? "ok" : "warn")}
         ${item("MW WP Form", form.hasMW ? "検出あり" : "検出なし", form.hasMW ? "ok" : "warn")}
-        ${item("reCAPTCHA", form.hasRecaptcha ? "検出あり" : "未検出", form.hasRecaptcha ? "ok" : "warn")}
-        ${item("mailto", (form.mailtos || []).length ? form.mailtos.join("<br>") : "検出なし", (form.mailtos || []).length ? "warn" : "ok")}
       </div>
 
       <div class="item" style="margin-top:14px;">
@@ -310,7 +308,8 @@ function render(data, companyDomain) {
       </div>
 
       <p class="note">
-        ※ CF7 / MW WP Form の送信先メールアドレスは、公開ページからは基本的に確認できません。最終的な送信先はWordPress管理画面で確認してください。
+        ※ Contact Form 7 / MW WP Form の送信先メールアドレスは、公開ページからは基本的に確認できません。<br>
+        最終的な送信先メールアドレスは、WordPress管理画面で確認してください。
       </p>
     </div>
   `;
