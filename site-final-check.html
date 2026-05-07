@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公開前チェックツール</title>
+
+<style>
+* { box-sizing:border-box; }
+
+:root {
+  --card:#fff;
+  --text:#222;
+  --sub:#666;
+  --line:#e7e7ef;
+  --accent:#5b7cfa;
+  --accent-weak:#eef2ff;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --radius:18px;
+  --ok:#1f8f5f;
+  --warn:#b7791f;
+  --ng:#d64545;
+}
+
+body {
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(180deg,#f8f9ff 0%,#f5f5fa 100%);
+  color:var(--text);
+}
+
+.wrap {
+  max-width:1000px;
+  margin:0 auto;
+  padding:32px 16px 48px;
+}
+
+.back {
+  display:inline-block;
+  margin-bottom:20px;
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:700;
+}
+
+.title {
+  font-size:32px;
+  font-weight:800;
+  margin:0 0 10px;
+}
+
+.lead {
+  color:var(--sub);
+  line-height:1.8;
+}
+
+.card {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  margin-top:10px;
+  font-size:16px;
+}
+
+button {
+  margin-top:12px;
+  padding:10px 14px;
+  border:none;
+  border-radius:999px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.status {
+  margin-top:10px;
+  padding:10px;
+  background:#f9f9ff;
+  border-radius:10px;
+  color:var(--sub);
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:14px;
+}
+
+.item {
+  background:#f9f9ff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  line-height:1.7;
+}
+
+.item strong {
+  display:block;
+  margin-bottom:4px;
+}
+
+.ok { color:var(--ok); font-weight:800; }
+.warn { color:var(--warn); font-weight:800; }
+.ng { color:var(--ng); font-weight:800; }
+
+.note {
+  color:var(--sub);
+  font-size:13px;
+  line-height:1.7;
+}
+
+pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  background:#f9f9ff;
+  padding:12px;
+  border-radius:12px;
+}
+
+@media (max-width: 760px) {
+  .grid { grid-template-columns:1fr; }
+}
+
+@media print {
+  .no-print { display:none !important; }
+  body { background:#fff; font-size:10px; }
+  .wrap { max-width:none; padding:0; }
+  .card { box-shadow:none; border:1px solid #ccc; padding:10px; margin-bottom:10px; }
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<a href="./" class="back no-print">← ツール一覧に戻る</a>
+
+<h1 class="title">公開前チェックツール</h1>
+<p class="lead no-print">
+  公開後のURLを入力して、noindex・robots・フォーム・基本SEO項目を確認します。
+</p>
+
+<div class="card no-print">
+  <input id="url" placeholder="https://example.com">
+  <input id="companyDomain" placeholder="自社メールドメイン（例：amnk.co.jp）※任意">
+
+  <button id="runBtn">チェックする</button>
+
+  <div id="status" class="status">未実行</div>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+const WORKER = "https://seo-tool.geass1127.workers.dev/";
+
+const urlInput = document.getElementById("url");
+
+document.getElementById("runBtn").onclick = run;
+
+urlInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
+async function run() {
+  const url = urlInput.value.trim();
+  const companyDomain = document.getElementById("companyDomain").value.trim();
+
+  if (!url) return alert("URLを入力してね！");
+
+  document.getElementById("status").innerText = "チェック中...";
+  document.getElementById("result").innerHTML = "";
+
+  try {
+    const res = await fetch(`${WORKER}?mode=finalcheck&url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+
+    render(data, companyDomain);
+
+    document.getElementById("status").innerText = "完了！";
+  } catch (e) {
+    document.getElementById("status").innerText = "取得に失敗しました。";
+    document.getElementById("result").innerHTML = `<pre>${escapeHtml(e.message)}</pre>`;
+  }
+}
+
+function render(data, companyDomain) {
+  const seo = data.seo || {};
+  const form = data.form || {};
+  const ogp = data.ogp || {};
+  const tracking = data.tracking || {};
+
+  const companyEmails = companyDomain
+    ? (form.visibleEmails || []).filter(mail => mail.includes(companyDomain))
+    : [];
+
+  document.getElementById("result").innerHTML = `
+    <div class="card">
+      <h2>総合チェック</h2>
+      <div class="grid">
+        ${item("noindex", seo.noindexDetected ? "NG：noindex検出" : "OK：検出なし", seo.noindexDetected ? "ng" : "ok")}
+        ${item("robots.txt", seo.robotsTxtHasDisallowAll ? "注意：Disallow: / 検出" : "OK：全体ブロックなし", seo.robotsTxtHasDisallowAll ? "warn" : "ok")}
+        ${item("title", seo.title ? seo.title : "NG：未設定", seo.title ? "ok" : "ng")}
+        ${item("description", seo.description ? seo.description : "注意：未設定", seo.description ? "ok" : "warn")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>フォームチェック</h2>
+      <div class="grid">
+        ${item("フォーム", form.formCount > 0 ? `OK：${form.formCount}個検出` : "注意：formタグ未検出", form.formCount > 0 ? "ok" : "warn")}
+        ${item("送信ボタン", form.submitCount > 0 ? `OK：${form.submitCount}個検出` : "注意：submit未検出", form.submitCount > 0 ? "ok" : "warn")}
+        ${item("Contact Form 7", form.hasCF7 ? "検出あり" : "検出なし", form.hasCF7 ? "ok" : "warn")}
+        ${item("MW WP Form", form.hasMW ? "検出あり" : "検出なし", form.hasMW ? "ok" : "warn")}
+        ${item("reCAPTCHA", form.hasRecaptcha ? "検出あり" : "検出なし", form.hasRecaptcha ? "ok" : "warn")}
+        ${item("mailto", (form.mailtos || []).length ? form.mailtos.join("<br>") : "検出なし", (form.mailtos || []).length ? "warn" : "ok")}
+      </div>
+
+      <div class="item" style="margin-top:14px;">
+        <strong>公開ページ上で見えるメールアドレス</strong>
+        ${(form.visibleEmails || []).length ? escapeHtml(form.visibleEmails.join("\n")) : "検出なし"}
+      </div>
+
+      <div class="item" style="margin-top:14px;">
+        <strong>自社メール残りチェック</strong>
+        ${
+          !companyDomain
+            ? "自社メールドメイン未入力"
+            : companyEmails.length
+              ? `<span class="ng">注意：自社ドメインのメールらしき文字列を検出</span><br>${escapeHtml(companyEmails.join("\n"))}`
+              : `<span class="ok">OK：公開HTML内には検出なし</span>`
+        }
+      </div>
+
+      <p class="note">
+        ※ CF7 / MW WP Form の送信先メールアドレスは、公開ページからは基本的に確認できません。最終的な送信先はWordPress管理画面で確認してください。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>SEO・表示補助チェック</h2>
+      <div class="grid">
+        ${item("canonical", seo.canonical ? seo.canonical : "未検出", seo.canonical ? "ok" : "warn")}
+        ${item("viewport", seo.viewport ? "OK：設定あり" : "注意：未検出", seo.viewport ? "ok" : "warn")}
+        ${item("OGP title", ogp.ogTitle ? ogp.ogTitle : "未検出", ogp.ogTitle ? "ok" : "warn")}
+        ${item("OGP image", ogp.ogImage ? ogp.ogImage : "未検出", ogp.ogImage ? "ok" : "warn")}
+        ${item("favicon", ogp.favicon ? ogp.favicon : "未検出", ogp.favicon ? "ok" : "warn")}
+        ${item("GA / GTM", tracking.hasGA || tracking.hasGTM ? "検出あり" : "未検出", tracking.hasGA || tracking.hasGTM ? "ok" : "warn")}
+      </div>
+    </div>
+  `;
+}
+
+function item(label, text, cls) {
+  return `
+    <div class="item">
+      <strong>${escapeHtml(label)}</strong>
+      <div class="${cls}">${text}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(str = "") {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[s]));
+}
+</script>
+
+</body>
+</html>
