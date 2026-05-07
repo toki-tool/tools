@@ -103,11 +103,30 @@ button {
   border-radius:14px;
   padding:14px;
   line-height:1.7;
+  overflow-wrap:anywhere;
 }
 
 .item strong {
   display:block;
   margin-bottom:4px;
+}
+
+.summary-ok {
+  border-left:8px solid var(--ok);
+}
+
+.summary-ng {
+  border-left:8px solid var(--ng);
+}
+
+.summary-warn {
+  border-left:8px solid var(--warn);
+}
+
+.summary-title {
+  font-size:24px;
+  font-weight:900;
+  margin-bottom:8px;
 }
 
 .ok { color:var(--ok); font-weight:800; }
@@ -148,11 +167,11 @@ pre {
 
 <h1 class="title">公開前チェックツール</h1>
 <p class="lead no-print">
-  公開後のURLを入力して、noindex・robots・フォーム・基本SEO項目を確認します。
+  公開URLからSEO・フォーム・基本設定を確認します。
 </p>
 
 <div class="card no-print">
-  <input id="url" placeholder="https://example.com">
+  <input id="url" placeholder="公開URL（例：https://example.com）">
   <input id="companyDomain" placeholder="自社メールドメイン（例：amnk.co.jp）※任意">
 
   <button id="runBtn">チェックする</button>
@@ -168,19 +187,22 @@ pre {
 const WORKER = "https://seo-tool.geass1127.workers.dev/";
 
 const urlInput = document.getElementById("url");
+const companyDomainInput = document.getElementById("companyDomain");
 
 document.getElementById("runBtn").onclick = run;
 
-urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
+[urlInput, companyDomainInput].forEach(input => {
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      run();
+    }
+  });
 });
 
 async function run() {
   const url = urlInput.value.trim();
-  const companyDomain = document.getElementById("companyDomain").value.trim();
+  const companyDomain = companyDomainInput.value.trim();
 
   if (!url) return alert("URLを入力してね！");
 
@@ -210,7 +232,34 @@ function render(data, companyDomain) {
     ? (form.visibleEmails || []).filter(mail => mail.includes(companyDomain))
     : [];
 
+  const fatalIssues = [];
+
+  if (seo.noindexDetected) fatalIssues.push("noindexが検出されています");
+  if (seo.robotsTxtHasDisallowAll) fatalIssues.push("robots.txtで全体ブロックの可能性があります");
+
+  const warnIssues = [];
+
+  if (!seo.title) warnIssues.push("titleが未設定です");
+  if (!seo.description) warnIssues.push("descriptionが未設定です");
+  if (!seo.viewport) warnIssues.push("viewportが未検出です");
+  if (!ogp.ogTitle || !ogp.ogImage) warnIssues.push("OGP情報に不足があります");
+  if (!(tracking.hasGA || tracking.hasGTM)) warnIssues.push("GA / GTMが未検出です");
+  if (companyDomain && companyEmails.length) warnIssues.push("公開HTML内に自社メールドメインが残っている可能性があります");
+
+  const summaryClass = fatalIssues.length ? "summary-ng" : warnIssues.length ? "summary-warn" : "summary-ok";
+  const summaryLabel = fatalIssues.length ? "公開NGの可能性あり" : warnIssues.length ? "要確認あり" : "公開条件OK";
+  const summaryText = fatalIssues.length
+    ? fatalIssues.join(" / ")
+    : warnIssues.length
+      ? warnIssues.join(" / ")
+      : "致命的な問題は検出されませんでした。";
+
   document.getElementById("result").innerHTML = `
+    <div class="card ${summaryClass}">
+      <div class="summary-title ${fatalIssues.length ? "ng" : warnIssues.length ? "warn" : "ok"}">${summaryLabel}</div>
+      <div>${escapeHtml(summaryText)}</div>
+    </div>
+
     <div class="card">
       <h2>総合チェック</h2>
       <div class="grid">
@@ -218,6 +267,18 @@ function render(data, companyDomain) {
         ${item("robots.txt", seo.robotsTxtHasDisallowAll ? "注意：Disallow: / 検出" : "OK：全体ブロックなし", seo.robotsTxtHasDisallowAll ? "warn" : "ok")}
         ${item("title", seo.title ? seo.title : "NG：未設定", seo.title ? "ok" : "ng")}
         ${item("description", seo.description ? seo.description : "注意：未設定", seo.description ? "ok" : "warn")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>SEO・表示補助チェック</h2>
+      <div class="grid">
+        ${item("canonical", seo.canonical ? seo.canonical : "未検出", seo.canonical ? "ok" : "warn")}
+        ${item("viewport", seo.viewport ? "OK：設定あり" : "注意：未検出", seo.viewport ? "ok" : "warn")}
+        ${item("OGP title", ogp.ogTitle ? ogp.ogTitle : "未検出", ogp.ogTitle ? "ok" : "warn")}
+        ${item("OGP image", ogp.ogImage ? ogp.ogImage : "未検出", ogp.ogImage ? "ok" : "warn")}
+        ${item("favicon", ogp.favicon ? ogp.favicon : "未検出", ogp.favicon ? "ok" : "warn")}
+        ${item("GA / GTM", tracking.hasGA || tracking.hasGTM ? "検出あり" : "未検出", tracking.hasGA || tracking.hasGTM ? "ok" : "warn")}
       </div>
     </div>
 
@@ -251,18 +312,6 @@ function render(data, companyDomain) {
       <p class="note">
         ※ CF7 / MW WP Form の送信先メールアドレスは、公開ページからは基本的に確認できません。最終的な送信先はWordPress管理画面で確認してください。
       </p>
-    </div>
-
-    <div class="card">
-      <h2>SEO・表示補助チェック</h2>
-      <div class="grid">
-        ${item("canonical", seo.canonical ? seo.canonical : "未検出", seo.canonical ? "ok" : "warn")}
-        ${item("viewport", seo.viewport ? "OK：設定あり" : "注意：未検出", seo.viewport ? "ok" : "warn")}
-        ${item("OGP title", ogp.ogTitle ? ogp.ogTitle : "未検出", ogp.ogTitle ? "ok" : "warn")}
-        ${item("OGP image", ogp.ogImage ? ogp.ogImage : "未検出", ogp.ogImage ? "ok" : "warn")}
-        ${item("favicon", ogp.favicon ? ogp.favicon : "未検出", ogp.favicon ? "ok" : "warn")}
-        ${item("GA / GTM", tracking.hasGA || tracking.hasGTM ? "検出あり" : "未検出", tracking.hasGA || tracking.hasGTM ? "ok" : "warn")}
-      </div>
     </div>
   `;
 }
