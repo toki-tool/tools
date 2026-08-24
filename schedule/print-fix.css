@@ -1,0 +1,45 @@
+@media print {
+  .a4-page,
+  .a4-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-bar {
+    border: 1px solid currentColor !important;
+  }
+
+  .print-bar.type-internal {
+    color: #405f6b;
+    background: #557c8b !important;
+  }
+
+  .print-bar.type-client {
+    color: #765a42;
+    background: #9a7556 !important;
+  }
+
+  .print-bar.type-photo {
+    color: #505a70;
+    background: #69768f !important;
+  }
+
+  .print-bar.type-milestone {
+    color: #7e4848;
+    background: #a05e5e !important;
+  }
+
+  .print-task-name i,
+  .print-foot i {
+    border: 1px solid currentColor;
+  }
+
+  .print-task-name i.type-internal,
+  .print-foot i.type-internal { color: #405f6b; }
+  .print-task-name i.type-client,
+  .print-foot i.type-client { color: #765a42; }
+  .print-task-name i.type-photo,
+  .print-foot i.type-photo { color: #505a70; }
+  .print-task-name i.type-milestone,
+  .print-foot i.type-milestone { color: #7e4848; }
+}
