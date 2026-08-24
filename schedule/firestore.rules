@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+        && get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.active == true;
+    }
+    function validProject(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.clientName is string && data.clientName.size() <= 100
+        && data.startDate is string && data.endDate is string
+        && data.publishDate is string && data.status is string;
+    }
+    function validTask(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 80
+        && data.startDate is string && data.endDate is string
+        && data.type in ['internal', 'client', 'photo', 'milestone']
+        && data.sortOrder is int;
+    }
+    match /staff/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /projects/{projectId} {
+      allow read, delete: if isStaff();
+      allow create, update: if isStaff() && validProject(request.resource.data);
+      match /tasks/{taskId} {
+        allow read, delete: if isStaff();
+        allow create, update: if isStaff() && validTask(request.resource.data);
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
