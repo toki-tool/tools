@@ -1,4 +1,9 @@
 @media print {
+  .a4-page {
+    transform: none !important;
+    margin: 0 !important;
+  }
+
   .a4-page,
   .a4-page * {
     -webkit-print-color-adjust: exact !important;
