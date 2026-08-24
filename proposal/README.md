@@ -7,9 +7,18 @@
 - 制作スケジュール: `projects/{projectId}` と `tasks`
 - Web提案: `proposalProjects/{proposalId}`
 
-## Firebase反映前の作業
+## URL自動診断
 
-`firestore.rules` の `proposalProjects` ルールを既存の本番ルールへ統合し、Firebase側へ反映する必要があります。リポジトリに設定ファイルやCLI構成は含まれていないため、本実装ではデプロイしていません。
+- Google PageSpeed Insights APIをブラウザから直接利用します。
+- APIキー、Firebase Functions、Cloud Run、有料APIは使用しません。
+- モバイル／デスクトップの速度、基本SEO、アクセシビリティを取得し、既存6観点へ編集可能な下書きとして反映します。
+- 入力URLは計測のためGoogle PageSpeed Insightsへ送信されます。
+- 公開ページから取得できない検索順位、AI検索への掲載、店舗情報、フォーム送信可否などは断定せず、目視確認候補として扱います。
+- キーなしの共有利用枠のため、上限到達・タイムアウト時は時間をおいて再実行します。
+
+## Firebaseルール
+
+`schedule/firestore.rules` に `proposalProjects` の認可ルールを統合済みです。既存の `staff/{uid}.active` が有効な認証済みユーザーだけが読み書きできます。
 
 ## 初版の範囲
 

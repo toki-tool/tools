@@ -22,6 +22,7 @@ function serializable(project, uid) {
     currentUrl: project.currentUrl,
     hearing: project.hearing,
     findings: project.findings,
+    diagnosis: project.diagnosis || null,
     createdAt: project.createdAt || new Date().toISOString(),
     createdBy: project.createdBy || uid,
     updatedBy: uid,
