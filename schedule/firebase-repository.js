@@ -59,6 +59,15 @@ export const projectRepository = {
     await deleteDoc(doc(db, 'projects', projectId, 'tasks', taskId));
   },
 
+  async deleteProject(projectId) {
+    const projectRef = doc(db, 'projects', projectId);
+    const taskSnapshots = await getDocs(collection(projectRef, 'tasks'));
+    const batch = writeBatch(db);
+    taskSnapshots.docs.forEach(snapshot => batch.delete(snapshot.ref));
+    batch.delete(projectRef);
+    await batch.commit();
+  },
+
   async replaceAll(projects) {
     const current = await this.loadProjects();
     if (current.length) {
