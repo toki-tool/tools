@@ -20,6 +20,14 @@ service cloud.firestore {
         && data.type in ['internal', 'client', 'photo', 'milestone']
         && data.sortOrder is int;
     }
+    function validProposal(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 120
+        && data.clientName is string && data.clientName.size() <= 120
+        && data.caseType in ['renewal', 'new']
+        && data.currentUrl is string && data.currentUrl.size() <= 500
+        && data.hearing is map
+        && data.findings is list && data.findings.size() == 6;
+    }
     match /staff/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
       allow write: if false;
@@ -31,6 +39,10 @@ service cloud.firestore {
         allow read, delete: if isStaff();
         allow create, update: if isStaff() && validTask(request.resource.data);
       }
+    }
+    match /proposalProjects/{proposalId} {
+      allow read, delete: if isStaff();
+      allow create, update: if isStaff() && validProposal(request.resource.data);
     }
     match /{document=**} { allow read, write: if false; }
   }
