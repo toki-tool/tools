@@ -1,3 +1,17 @@
+.a4-page {
+  --internal: #1f5a73;
+  --client: #c18432;
+  --photo: #686f99;
+  --milestone: #aa4148;
+}
+
+.print-kicker { font-size: 10px; }
+.print-label-head { font-size: 10px; }
+.print-months span { font-size: 9.5px; }
+.print-task-name { font-size: 10.5px; }
+.print-foot { font-size: 8.5px; }
+.print-task-name i { width: 10px; height: 10px; }
+
 @media print {
   .a4-page {
     transform: none !important;
@@ -15,23 +29,23 @@
   }
 
   .print-bar.type-internal {
-    color: #405f6b;
-    background: #557c8b !important;
+    color: #174253;
+    background: #1f5a73 !important;
   }
 
   .print-bar.type-client {
-    color: #765a42;
-    background: #9a7556 !important;
+    color: #85591f;
+    background: #c18432 !important;
   }
 
   .print-bar.type-photo {
-    color: #505a70;
-    background: #69768f !important;
+    color: #494e70;
+    background: #686f99 !important;
   }
 
   .print-bar.type-milestone {
-    color: #7e4848;
-    background: #a05e5e !important;
+    color: #762d32;
+    background: #aa4148 !important;
   }
 
   .print-task-name i,
@@ -40,11 +54,11 @@
   }
 
   .print-task-name i.type-internal,
-  .print-foot i.type-internal { color: #405f6b; }
+  .print-foot i.type-internal { color: #174253; }
   .print-task-name i.type-client,
-  .print-foot i.type-client { color: #765a42; }
+  .print-foot i.type-client { color: #85591f; }
   .print-task-name i.type-photo,
-  .print-foot i.type-photo { color: #505a70; }
+  .print-foot i.type-photo { color: #494e70; }
   .print-task-name i.type-milestone,
-  .print-foot i.type-milestone { color: #7e4848; }
+  .print-foot i.type-milestone { color: #762d32; }
 }
